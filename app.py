@@ -104,13 +104,13 @@ def build_notion_properties(data: Dict[str, Optional[str]]) -> Dict[str, dict]:
         if value:
             properties[name] = builder(value)
 
-    add_property("Name", data.get("name"), lambda v: {"title": [{"text": {"content": v}}]})
-    add_property("Company", data.get("company"), lambda v: {"rich_text": [{"text": {"content": v}}]})
-    add_property("Website", data.get("website"), lambda v: {"url": v})
-    add_property("Email", data.get("email"), lambda v: {"email": v})
-    add_property("Phone 1", data.get("phone_number_1"), lambda v: {"phone_number": v})
-    add_property("Phone 2", data.get("phone_number_2"), lambda v: {"phone_number": v})
-    add_property("Industry", data.get("industry"), lambda v: {"rich_text": [{"text": {"content": v}}]})
+    add_property("氏名", data.get("name"), lambda v: {"title": [{"text": {"content": v}}]})
+    add_property("会社名", data.get("company"), lambda v: {"rich_text": [{"text": {"content": v}}]})
+    add_property("会社HP", data.get("website"), lambda v: {"url": v})
+    add_property("メールアドレス", data.get("email"), lambda v: {"email": v})
+    add_property("電話番号1", data.get("phone_number_1"), lambda v: {"phone_number": v})
+    add_property("電話番号2", data.get("phone_number_2"), lambda v: {"phone_number": v})
+    add_property("業種", data.get("industry"), lambda v: {"rich_text": [{"text": {"content": v}}]})
 
     return properties
 
