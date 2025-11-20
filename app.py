@@ -171,7 +171,8 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
         "phone_number_1, phone_number_2, industry. If a value is missing, use an empty string. "
         "Infer the industry from the company name when not explicitly shown. Summarize the industry in Japanese within roughly 100 characters, avoiding overly terse labels. "
         "Use Japanese for all returned values, including the industry. When the card shows a name in Japanese, keep it as-is; "
-        "if both Japanese and English names appear, choose the Japanese name."
+        "if both Japanese and English names appear, choose the Japanese name. "
+        "Do not translate or rewrite names or company names—copy them exactly as printed on the card, including spacing and punctuation."
     )
 
     user_message = [
