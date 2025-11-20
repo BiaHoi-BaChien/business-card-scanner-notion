@@ -167,8 +167,10 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
     """Use OpenAI to extract contact data from one or two business card images."""
     system_prompt = (
         "You are an assistant that extracts structured contact details from business cards. "
-        "Return a single JSON object with these keys: name, company, website, email, "
+        "Always return a single JSON object with these keys: name, company, website, email, "
         "phone_number_1, phone_number_2, industry. If a value is missing, use an empty string. "
+        "Multiple images may contain different business cards—merge every clue across all images into one consolidated contact. "
+        "If multiple phone numbers are found, keep at most two unique ones. Prefer the most complete/modern-looking email, URL, and company name when variations exist. "
         "Infer the industry from the company name when not explicitly shown. Summarize the industry in Japanese within roughly 100 characters, avoiding overly terse labels. "
         "Use Japanese for all returned values, including the industry. When the card shows a name in Japanese, keep it as-is; "
         "if both Japanese and English names appear, choose the Japanese name. "
@@ -178,7 +180,10 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
     user_message = [
         {
             "type": "text",
-            "text": "Extract the contact information from the provided business card images.",
+            "text": (
+                "Extract and merge the contact information from all provided business card "
+                "images into one consolidated record. Do not create multiple records."
+            ),
         },
         *build_image_parts(files),
     ]
