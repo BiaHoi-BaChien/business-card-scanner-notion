@@ -28,7 +28,7 @@ def load_property_config(config_path: str = "property_config.json") -> Dict[str,
     """Load configurable Notion property names from a JSON file.
 
     The file is expected to contain string values for these keys:
-    name, company, website, email, phone_number_1, phone_number_2, industry.
+    name, company, website, email, phone_number_1, phone_number_2, industry, photos.
     Missing keys fall back to sensible defaults.
     """
 
@@ -40,6 +40,7 @@ def load_property_config(config_path: str = "property_config.json") -> Dict[str,
         "phone_number_1": "電話番号1",
         "phone_number_2": "電話番号2",
         "industry": "業種",
+        "photos": "写真",
     }
 
     path = Path(config_path)
@@ -81,17 +82,23 @@ def encode_image(uploaded_file: UploadedFile) -> str:
     return base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
 
 
+def uploaded_file_to_data_url(uploaded_file: UploadedFile) -> str:
+    """Convert an uploaded file to a data URL that Notion can store as an external file."""
+
+    mime_type = uploaded_file.type or "image/png"
+    encoded = encode_image(uploaded_file)
+    return f"data:{mime_type};base64,{encoded}"
+
+
 def build_image_parts(files: List[UploadedFile]) -> List[dict]:
     """Convert uploaded files into OpenAI message image parts."""
     image_parts: List[dict] = []
     for file in files:
-        mime_type = file.type or "image/png"
-        encoded = encode_image(file)
         image_parts.append(
             {
                 "type": "image_url",
                 "image_url": {
-                    "url": f"data:{mime_type};base64,{encoded}",
+                    "url": uploaded_file_to_data_url(file),
                 },
             }
         )
@@ -104,7 +111,7 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
         "You are an assistant that extracts structured contact details from business cards. "
         "Return a single JSON object with these keys: name, company, website, email, "
         "phone_number_1, phone_number_2, industry. If a value is missing, use an empty string. "
-        "Infer the industry from the company name when not explicitly shown. "
+        "Infer the industry from the company name when not explicitly shown. Summarize the industry in Japanese within roughly 100 characters, avoiding overly terse labels. "
         "Use Japanese for all returned values, including the industry. When the card shows a name in Japanese, keep it as-is; "
         "if both Japanese and English names appear, choose the Japanese name."
     )
@@ -132,7 +139,9 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
 
 
 def build_notion_properties(
-    data: Dict[str, Optional[str]], property_names: Dict[str, str]
+    data: Dict[str, Optional[str]],
+    property_names: Dict[str, str],
+    photo_files: Optional[List[UploadedFile]] = None,
 ) -> Dict[str, dict]:
     """Build Notion property payload, skipping empty values."""
     properties: Dict[str, dict] = {}
@@ -174,6 +183,17 @@ def build_notion_properties(
         data.get("industry"),
         lambda v: {"rich_text": [{"text": {"content": v}}]},
     )
+
+    if photo_files:
+        properties[property_names["photos"]] = {
+            "files": [
+                {
+                    "name": file.name,
+                    "external": {"url": uploaded_file_to_data_url(file)},
+                }
+                for file in photo_files
+            ]
+        }
 
     return properties
 
@@ -226,6 +246,7 @@ def save_to_notion(
     notion_version: str,
     data: Dict[str, Optional[str]],
     property_names: Dict[str, str],
+    photo_files: Optional[List[UploadedFile]] = None,
 ) -> requests.Response:
     """Create a new page in Notion with the extracted contact data."""
     url = "https://api.notion.com/v1/pages"
@@ -247,7 +268,7 @@ def save_to_notion(
 
     payload = {
         "parent": {"data_source_id": data_source_id},
-        "properties": build_notion_properties(data, property_names),
+        "properties": build_notion_properties(data, property_names, photo_files),
     }
 
     return requests.post(url, headers=headers, json=payload, timeout=30)
@@ -307,6 +328,7 @@ def main():
                     settings["notion_version"],
                     contact_data,
                     property_names,
+                    uploaded_files,
                 )
 
             if response.status_code in {200, 201}:
