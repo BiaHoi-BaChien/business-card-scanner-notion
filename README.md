@@ -11,7 +11,7 @@
    NOTION_DATA_SOURCE_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    NOTION_VERSION=2025-09-03
    AUTH_SECRET=demo-shared-secret
-   AUTH_USERNAME_ENC=Ne00yQ==
+   AUTH_USERNAME_ENC=Nfk-0FSls44iEbI=
    AUTH_PASSWORD_ENC=FK84gUiB38lyApHY
    ```
 2. 依存関係をインストールします。
@@ -34,7 +34,7 @@
 
 - `.env` に格納するユーザー名とパスワードは、`AUTH_SECRET` を使った XOR 方式で暗号化した値を `AUTH_USERNAME_ENC` と `AUTH_PASSWORD_ENC` に設定します。
 - `.env.example` にはサンプルとして以下が入っています。
-  - 平文ユーザー名: `sugi`
+  - 平文ユーザー名: `sample_user`
   - 平文パスワード: `R7k!pA32#vQm`
   - 秘密鍵: `demo-shared-secret`
 - 独自の値に置き換える場合は以下のスニペットで暗号化できます。
