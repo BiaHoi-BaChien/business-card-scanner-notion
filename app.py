@@ -14,7 +14,6 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 load_dotenv()
 
-
 def load_settings() -> Dict[str, Optional[str]]:
     """Load required API settings from environment variables."""
     return {
@@ -32,7 +31,7 @@ def load_property_config(config_path: str = "property_config.json") -> Dict[str,
     """Load configurable Notion property names from a JSON file.
 
     The file is expected to contain string values for these keys:
-    name, company, website, email, phone_number_1, phone_number_2, industry, photos.
+    name, company, website, email, phone_number_1, phone_number_2, industry.
     Missing keys fall back to sensible defaults.
     """
 
@@ -44,7 +43,6 @@ def load_property_config(config_path: str = "property_config.json") -> Dict[str,
         "phone_number_1": "電話番号1",
         "phone_number_2": "電話番号2",
         "industry": "業種",
-        "photos": "写真",
     }
 
     path = Path(config_path)
@@ -136,15 +134,15 @@ def create_openai_client(api_key: str) -> OpenAI:
 
 
 def encode_image(uploaded_file: UploadedFile) -> str:
-    """Base64-encode an uploaded image for OpenAI image inputs."""
+    """Base64-encode an image for OpenAI image inputs without resizing."""
     return base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
 
 
 def uploaded_file_to_data_url(uploaded_file: UploadedFile) -> str:
     """Convert an uploaded file to a data URL that Notion can store as an external file."""
 
-    mime_type = uploaded_file.type or "image/png"
-    encoded = encode_image(uploaded_file)
+    mime_type = uploaded_file.type or "application/octet-stream"
+    encoded = base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
     return f"data:{mime_type};base64,{encoded}"
 
 
@@ -197,9 +195,7 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
 
 
 def build_notion_properties(
-    data: Dict[str, Optional[str]],
-    property_names: Dict[str, str],
-    photo_files: Optional[List[UploadedFile]] = None,
+    data: Dict[str, Optional[str]], property_names: Dict[str, str]
 ) -> Dict[str, dict]:
     """Build Notion property payload, skipping empty values."""
     properties: Dict[str, dict] = {}
@@ -241,17 +237,6 @@ def build_notion_properties(
         data.get("industry"),
         lambda v: {"rich_text": [{"text": {"content": v}}]},
     )
-
-    if photo_files:
-        properties[property_names["photos"]] = {
-            "files": [
-                {
-                    "name": file.name,
-                    "external": {"url": uploaded_file_to_data_url(file)},
-                }
-                for file in photo_files
-            ]
-        }
 
     return properties
 
@@ -304,7 +289,6 @@ def save_to_notion(
     notion_version: str,
     data: Dict[str, Optional[str]],
     property_names: Dict[str, str],
-    photo_files: Optional[List[UploadedFile]] = None,
 ) -> requests.Response:
     """Create a new page in Notion with the extracted contact data."""
     url = "https://api.notion.com/v1/pages"
@@ -325,8 +309,8 @@ def save_to_notion(
         )
 
     payload = {
-        "parent": {"data_source_id": data_source_id},
-        "properties": build_notion_properties(data, property_names, photo_files),
+        "parent": {"database_id": data_source_id},
+        "properties": build_notion_properties(data, property_names),
     }
 
     return requests.post(url, headers=headers, json=payload, timeout=30)
@@ -483,6 +467,8 @@ def render_app_body(
                 st.error("必要な設定が不足しています。環境変数を確認してください。")
                 return
 
+            st.info("写真は Notion には保存されず、抽出した文字情報のみ登録します。")
+
             with st.spinner("Notion に送信中..."):
                 response = save_to_notion(
                     settings["notion_api_key"],
@@ -490,7 +476,6 @@ def render_app_body(
                     settings["notion_version"],
                     contact_data,
                     property_names,
-                    uploaded_files,
                 )
 
             if response.status_code in {200, 201}:
