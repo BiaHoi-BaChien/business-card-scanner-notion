@@ -3,7 +3,7 @@ import json
 import os
 import hashlib
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 import httpx
@@ -14,16 +14,25 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 load_dotenv()
 
+def _getenv_stripped(name: str, default: Optional[str] = None) -> Optional[str]:
+    value = os.getenv(name, default)
+    if value is None:
+        return None
+
+    value = value.strip()
+    return value or None
+
+
 def load_settings() -> Dict[str, Optional[str]]:
     """Load required API settings from environment variables."""
     return {
-        "openai_api_key": os.getenv("OPENAI_API_KEY"),
-        "notion_api_key": os.getenv("NOTION_API_KEY"),
-        "notion_data_source_id": os.getenv("NOTION_DATA_SOURCE_ID"),
-        "notion_version": os.getenv("NOTION_VERSION", "2025-09-03"),
-        "auth_secret": os.getenv("AUTH_SECRET"),
-        "auth_username_enc": os.getenv("AUTH_USERNAME_ENC"),
-        "auth_password_enc": os.getenv("AUTH_PASSWORD_ENC"),
+        "openai_api_key": _getenv_stripped("OPENAI_API_KEY"),
+        "notion_api_key": _getenv_stripped("NOTION_API_KEY"),
+        "notion_data_source_id": _getenv_stripped("NOTION_DATA_SOURCE_ID"),
+        "notion_version": _getenv_stripped("NOTION_VERSION", "2025-09-03"),
+        "auth_secret": _getenv_stripped("AUTH_SECRET"),
+        "auth_username_enc": _getenv_stripped("AUTH_USERNAME_ENC"),
+        "auth_password_enc": _getenv_stripped("AUTH_PASSWORD_ENC"),
     }
 
 
@@ -289,6 +298,46 @@ def ensure_select_option(
     )
 
 
+def validate_notion_database_access(
+    notion_api_key: str, notion_version: str, data_source_id: str
+) -> Tuple[bool, str]:
+    """Validate the Notion database access before posting a page.
+
+    Returns a tuple of (is_valid, message). When ``is_valid`` is False, the
+    message contains user-facing guidance.
+    """
+
+    url = f"https://api.notion.com/v1/databases/{data_source_id}"
+    headers = {
+        "Authorization": f"Bearer {notion_api_key}",
+        "Notion-Version": notion_version,
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+    except requests.RequestException as exc:
+        return False, f"Notion データベースへの接続に失敗しました: {exc}"
+
+    if response.status_code == 200:
+        return True, ""
+
+    try:
+        detail = response.json()
+    except Exception:
+        detail = response.text
+
+    if response.status_code == 404:
+        message = (
+            "Notion データベースが見つかりません。"
+            " データソースIDが正しいこと、および対象データベースが"
+            " インテグレーションに共有されていることを確認してください。"
+        )
+    else:
+        message = f"Notion データベースの取得に失敗しました (status: {response.status_code})。"
+
+    return False, f"{message} 詳細: {detail}"
+
+
 def save_to_notion(
     notion_api_key: str,
     data_source_id: str,
@@ -487,6 +536,15 @@ def render_app_body(
             missing = [k for k, v in settings.items() if not v]
             if missing:
                 st.error("必要な設定が不足しています。環境変数を確認してください。")
+                return
+
+            is_valid, message = validate_notion_database_access(
+                settings["notion_api_key"],
+                settings["notion_version"],
+                settings["notion_data_source_id"],
+            )
+            if not is_valid:
+                st.error(message)
                 return
 
             st.info("写真は Notion には保存されず、抽出した文字情報のみ登録します。")
