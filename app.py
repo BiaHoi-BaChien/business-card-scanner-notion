@@ -350,6 +350,9 @@ def ensure_session_defaults():
     st.session_state.setdefault("authenticated", False)
     st.session_state.setdefault("login_method", "")
     st.session_state.setdefault("registered_passkey_hash", None)
+    st.session_state.setdefault("uploader_key", 0)
+    st.session_state.setdefault("contact_data", None)
+    st.session_state.setdefault("confirm_notion", False)
 
 
 def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
@@ -444,17 +447,30 @@ def render_passkey_registration(settings: Dict[str, Optional[str]]):
 def render_app_body(
     settings: Dict[str, Optional[str]], property_names: Dict[str, str]
 ):
+    uploader_key = st.session_state.get("uploader_key", 0)
+
     uploaded_files = st.file_uploader(
         "名刺画像をアップロード (最大2枚)",
         type=["png", "jpg", "jpeg"],
         accept_multiple_files=True,
+        key=f"uploader_{uploader_key}",
     )
 
     if uploaded_files and len(uploaded_files) > 2:
         st.error("アップロードできるのは最大2枚までです。")
         uploaded_files = uploaded_files[:2]
 
-    if st.button("AIで解析"):
+    action_cols = st.columns(2)
+    with action_cols[0]:
+        analyze_clicked = st.button("AIで解析", use_container_width=True)
+    with action_cols[1]:
+        if st.button("クリア", type="secondary", use_container_width=True):
+            st.session_state["contact_data"] = None
+            st.session_state["confirm_notion"] = False
+            st.session_state["uploader_key"] = uploader_key + 1
+            st.rerun()
+
+    if analyze_clicked:
         if not uploaded_files:
             st.error("少なくとも1枚の名刺画像をアップロードしてください。")
             return
