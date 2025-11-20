@@ -8,7 +8,8 @@
    ```env
    OPENAI_API_KEY=sk-...
    NOTION_API_KEY=secret_...
-   NOTION_DATABASE_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   NOTION_DATA_SOURCE_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   NOTION_VERSION=2025-09-03
    ```
 2. 依存関係をインストールします。
    ```bash
@@ -22,5 +23,5 @@
 ## 使い方
 
 - アプリの UI から名刺画像（表・裏の最大 2 枚）をアップロードします。
-- OpenAI API が氏名・会社名などの連絡先を抽出し、Notion API を通じて指定データベースに登録します。
+- OpenAI API が氏名・会社名などの連絡先を抽出し、Notion API を通じて指定のデータソースに登録します。
 - 抽出結果と Notion への登録状況が画面に表示されます。

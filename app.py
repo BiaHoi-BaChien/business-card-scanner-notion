@@ -18,7 +18,8 @@ def load_settings() -> Dict[str, Optional[str]]:
     return {
         "openai_api_key": os.getenv("OPENAI_API_KEY"),
         "notion_api_key": os.getenv("NOTION_API_KEY"),
-        "notion_database_id": os.getenv("NOTION_DATABASE_ID"),
+        "notion_data_source_id": os.getenv("NOTION_DATA_SOURCE_ID"),
+        "notion_version": os.getenv("NOTION_VERSION", "2025-09-03"),
     }
 
 
@@ -115,18 +116,21 @@ def build_notion_properties(data: Dict[str, Optional[str]]) -> Dict[str, dict]:
 
 
 def save_to_notion(
-    notion_api_key: str, database_id: str, data: Dict[str, Optional[str]]
+    notion_api_key: str,
+    data_source_id: str,
+    notion_version: str,
+    data: Dict[str, Optional[str]],
 ) -> requests.Response:
     """Create a new page in Notion with the extracted contact data."""
     url = "https://api.notion.com/v1/pages"
     headers = {
         "Authorization": f"Bearer {notion_api_key}",
-        "Notion-Version": "2022-06-28",
+        "Notion-Version": notion_version,
         "Content-Type": "application/json",
     }
 
     payload = {
-        "parent": {"database_id": database_id},
+        "parent": {"data_source_id": data_source_id},
         "properties": build_notion_properties(data),
     }
 
@@ -145,7 +149,7 @@ def main():
     st.set_page_config(page_title="名刺スキャナ (OpenAI → Notion)", page_icon="🪪")
     st.title("名刺スキャナ (OpenAI → Notion)")
     st.write(
-        "名刺の表裏をアップロードすると、OpenAI が情報を抽出し、Notion データベースに登録します。"
+        "名刺の表裏をアップロードすると、OpenAI が情報を抽出し、Notion のデータソースに登録します。"
     )
 
     settings = load_settings()
@@ -181,7 +185,10 @@ def main():
 
             with st.spinner("Notion に送信中..."):
                 response = save_to_notion(
-                    settings["notion_api_key"], settings["notion_database_id"], contact_data
+                    settings["notion_api_key"],
+                    settings["notion_data_source_id"],
+                    settings["notion_version"],
+                    contact_data,
                 )
 
             if response.status_code in {200, 201}:
