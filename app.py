@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import requests
@@ -21,6 +22,38 @@ def load_settings() -> Dict[str, Optional[str]]:
         "notion_data_source_id": os.getenv("NOTION_DATA_SOURCE_ID"),
         "notion_version": os.getenv("NOTION_VERSION", "2025-09-03"),
     }
+
+
+def load_property_config(config_path: str = "property_config.json") -> Dict[str, str]:
+    """Load configurable Notion property names from a JSON file.
+
+    The file is expected to contain string values for these keys:
+    name, company, website, email, phone_number_1, phone_number_2, industry.
+    Missing keys fall back to sensible defaults.
+    """
+
+    defaults = {
+        "name": "名前",
+        "company": "会社名",
+        "website": "会社HP",
+        "email": "メールアドレス",
+        "phone_number_1": "電話番号1",
+        "phone_number_2": "電話番号2",
+        "industry": "業種",
+    }
+
+    path = Path(config_path)
+    if not path.is_file():
+        return defaults
+
+    try:
+        overrides = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return defaults
+
+    merged = {**defaults}
+    merged.update({k: v for k, v in overrides.items() if isinstance(v, str) and v})
+    return merged
 
 
 def create_openai_client(api_key: str) -> OpenAI:
@@ -96,7 +129,9 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
     return json.loads(content)
 
 
-def build_notion_properties(data: Dict[str, Optional[str]]) -> Dict[str, dict]:
+def build_notion_properties(
+    data: Dict[str, Optional[str]], property_names: Dict[str, str]
+) -> Dict[str, dict]:
     """Build Notion property payload, skipping empty values."""
     properties: Dict[str, dict] = {}
 
@@ -104,15 +139,83 @@ def build_notion_properties(data: Dict[str, Optional[str]]) -> Dict[str, dict]:
         if value:
             properties[name] = builder(value)
 
-    add_property("氏名", data.get("name"), lambda v: {"title": [{"text": {"content": v}}]})
-    add_property("会社名", data.get("company"), lambda v: {"rich_text": [{"text": {"content": v}}]})
-    add_property("会社HP", data.get("website"), lambda v: {"url": v})
-    add_property("メールアドレス", data.get("email"), lambda v: {"email": v})
-    add_property("電話番号1", data.get("phone_number_1"), lambda v: {"phone_number": v})
-    add_property("電話番号2", data.get("phone_number_2"), lambda v: {"phone_number": v})
-    add_property("業種", data.get("industry"), lambda v: {"rich_text": [{"text": {"content": v}}]})
+    add_property(
+        property_names["name"],
+        data.get("name"),
+        lambda v: {"title": [{"text": {"content": v}}]},
+    )
+    add_property(
+        property_names["company"],
+        data.get("company"),
+        lambda v: {"select": {"name": v}},
+    )
+    add_property(
+        property_names["website"], data.get("website"), lambda v: {"url": v}
+    )
+    add_property(
+        property_names["email"],
+        data.get("email"),
+        lambda v: {"rich_text": [{"text": {"content": v}}]},
+    )
+    add_property(
+        property_names["phone_number_1"],
+        data.get("phone_number_1"),
+        lambda v: {"phone_number": v},
+    )
+    add_property(
+        property_names["phone_number_2"],
+        data.get("phone_number_2"),
+        lambda v: {"phone_number": v},
+    )
+    add_property(
+        property_names["industry"],
+        data.get("industry"),
+        lambda v: {"rich_text": [{"text": {"content": v}}]},
+    )
 
     return properties
+
+
+def ensure_select_option(
+    notion_api_key: str,
+    notion_version: str,
+    data_source_id: str,
+    property_name: str,
+    option_name: str,
+):
+    """Add a select option to the database if it does not already exist."""
+
+    url = f"https://api.notion.com/v1/databases/{data_source_id}"
+    headers = {
+        "Authorization": f"Bearer {notion_api_key}",
+        "Notion-Version": notion_version,
+        "Content-Type": "application/json",
+    }
+
+    response = requests.get(url, headers=headers, timeout=30)
+    if response.status_code != 200:
+        return
+
+    properties = response.json().get("properties", {})
+    select_property = properties.get(property_name)
+    if not select_property or select_property.get("type") != "select":
+        return
+
+    options = select_property.get("select", {}).get("options", [])
+    if any(option.get("name") == option_name for option in options):
+        return
+
+    updated_options = options + [{"name": option_name, "color": "default"}]
+    requests.patch(
+        url,
+        headers=headers,
+        json={
+            "properties": {
+                property_name: {"select": {"options": updated_options}},
+            }
+        },
+        timeout=30,
+    )
 
 
 def save_to_notion(
@@ -120,6 +223,7 @@ def save_to_notion(
     data_source_id: str,
     notion_version: str,
     data: Dict[str, Optional[str]],
+    property_names: Dict[str, str],
 ) -> requests.Response:
     """Create a new page in Notion with the extracted contact data."""
     url = "https://api.notion.com/v1/pages"
@@ -129,9 +233,19 @@ def save_to_notion(
         "Content-Type": "application/json",
     }
 
+    company_value = data.get("company")
+    if company_value:
+        ensure_select_option(
+            notion_api_key,
+            notion_version,
+            data_source_id,
+            property_names["company"],
+            company_value,
+        )
+
     payload = {
         "parent": {"data_source_id": data_source_id},
-        "properties": build_notion_properties(data),
+        "properties": build_notion_properties(data, property_names),
     }
 
     return requests.post(url, headers=headers, json=payload, timeout=30)
@@ -153,6 +267,7 @@ def main():
     )
 
     settings = load_settings()
+    property_names = load_property_config()
     show_settings_warning(settings)
 
     uploaded_files = st.file_uploader(
@@ -189,6 +304,7 @@ def main():
                     settings["notion_data_source_id"],
                     settings["notion_version"],
                     contact_data,
+                    property_names,
                 )
 
             if response.status_code in {200, 201}:

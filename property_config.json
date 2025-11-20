@@ -1,0 +1,9 @@
+{
+  "name": "名前",
+  "company": "会社名",
+  "website": "会社HP",
+  "email": "メールアドレス",
+  "phone_number_1": "電話番号1",
+  "phone_number_2": "電話番号2",
+  "industry": "業種"
+}
