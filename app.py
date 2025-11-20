@@ -104,7 +104,9 @@ def extract_contact_data(client: OpenAI, files: List[UploadedFile]) -> Dict[str,
         "You are an assistant that extracts structured contact details from business cards. "
         "Return a single JSON object with these keys: name, company, website, email, "
         "phone_number_1, phone_number_2, industry. If a value is missing, use an empty string. "
-        "Infer the industry from the company name when not explicitly shown."
+        "Infer the industry from the company name when not explicitly shown. "
+        "Use Japanese for all returned values, including the industry. When the card shows a name in Japanese, keep it as-is; "
+        "if both Japanese and English names appear, choose the Japanese name."
     )
 
     user_message = [
