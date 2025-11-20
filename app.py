@@ -509,5 +509,23 @@ def render_app_body(
                     st.text(response.text)
 
 
+def main():
+    st.set_page_config(page_title="Business Card Scanner", page_icon="🪪")
+
+    st.title("名刺スキャナ (Notion 連携デモ)")
+    st.caption("スマホで撮影した名刺を AI で解析し、Notion に登録します。")
+
+    settings = load_settings()
+    property_names = load_property_config()
+
+    show_settings_warning(settings)
+
+    if not render_authentication(settings):
+        return
+
+    render_passkey_registration(settings)
+    render_app_body(settings, property_names)
+
+
 if __name__ == "__main__":
     main()
