@@ -4,6 +4,7 @@ import os
 from typing import Dict, List, Optional
 
 import requests
+import httpx
 import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -19,6 +20,26 @@ def load_settings() -> Dict[str, Optional[str]]:
         "notion_api_key": os.getenv("NOTION_API_KEY"),
         "notion_database_id": os.getenv("NOTION_DATABASE_ID"),
     }
+
+
+def create_openai_client(api_key: str) -> OpenAI:
+    """Create an OpenAI client while honoring proxy settings if provided.
+
+    Some environments set HTTP(S) proxy variables. The official OpenAI
+    constructor does not accept a ``proxies`` keyword argument, so we build a
+    compatible httpx client when a proxy is configured.
+    """
+
+    proxy = (
+        os.getenv("HTTP_PROXY")
+        or os.getenv("HTTPS_PROXY")
+        or os.getenv("ALL_PROXY")
+        or os.getenv("http_proxy")
+        or os.getenv("https_proxy")
+    )
+
+    http_client = httpx.Client(proxies=proxy) if proxy else None
+    return OpenAI(api_key=api_key, http_client=http_client)
 
 
 def encode_image(uploaded_file: UploadedFile) -> str:
@@ -152,7 +173,7 @@ def main():
 
         try:
             with st.spinner("OpenAI で解析中..."):
-                client = OpenAI(api_key=settings["openai_api_key"])
+                client = create_openai_client(settings["openai_api_key"])
                 contact_data = extract_contact_data(client, uploaded_files)
 
             st.subheader("抽出結果")
