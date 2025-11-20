@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -21,6 +22,9 @@ def load_settings() -> Dict[str, Optional[str]]:
         "notion_api_key": os.getenv("NOTION_API_KEY"),
         "notion_data_source_id": os.getenv("NOTION_DATA_SOURCE_ID"),
         "notion_version": os.getenv("NOTION_VERSION", "2025-09-03"),
+        "auth_secret": os.getenv("AUTH_SECRET"),
+        "auth_username_enc": os.getenv("AUTH_USERNAME_ENC"),
+        "auth_password_enc": os.getenv("AUTH_PASSWORD_ENC"),
     }
 
 
@@ -54,6 +58,60 @@ def load_property_config(config_path: str = "property_config.json") -> Dict[str,
     merged = {**defaults}
     merged.update({k: v for k, v in overrides.items() if isinstance(v, str) and v})
     return merged
+
+
+def derive_key(secret: str) -> bytes:
+    return hashlib.sha256(secret.encode("utf-8")).digest()
+
+
+def xor_bytes(data: bytes, key: bytes) -> bytes:
+    return bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
+
+
+def decrypt_value(token: Optional[str], secret: Optional[str]) -> Optional[str]:
+    """Decrypt a base64-encoded token using a SHA-256 derived XOR key."""
+
+    if not token or not secret:
+        return None
+
+    try:
+        cipher = base64.urlsafe_b64decode(token.encode("utf-8"))
+        plain = xor_bytes(cipher, derive_key(secret))
+        return plain.decode("utf-8")
+    except Exception:
+        return None
+
+
+def hash_passkey(passkey: str, secret: str) -> str:
+    return hashlib.sha256((passkey + secret).encode("utf-8")).hexdigest()
+
+
+def verify_password_login(
+    username: str, password: str, settings: Dict[str, Optional[str]]
+) -> bool:
+    expected_username = decrypt_value(
+        settings.get("auth_username_enc"), settings.get("auth_secret")
+    )
+    expected_password = decrypt_value(
+        settings.get("auth_password_enc"), settings.get("auth_secret")
+    )
+
+    return bool(
+        expected_username
+        and expected_password
+        and username == expected_username
+        and password == expected_password
+    )
+
+
+def verify_passkey(passkey: str, settings: Dict[str, Optional[str]]) -> bool:
+    secret = settings.get("auth_secret")
+    stored_hash = st.session_state.get("registered_passkey_hash")
+
+    if not passkey or not secret or not stored_hash:
+        return False
+
+    return stored_hash == hash_passkey(passkey, secret)
 
 
 def create_openai_client(api_key: str) -> OpenAI:
@@ -261,6 +319,166 @@ def show_settings_warning(settings: Dict[str, Optional[str]]):
         )
 
 
+def ensure_session_defaults():
+    st.session_state.setdefault("authenticated", False)
+    st.session_state.setdefault("login_method", "")
+    st.session_state.setdefault("registered_passkey_hash", None)
+
+
+def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
+    ensure_session_defaults()
+
+    st.subheader("ログイン")
+    missing_auth = [
+        key
+        for key in ("auth_secret", "auth_username_enc", "auth_password_enc")
+        if not settings.get(key)
+    ]
+
+    if st.session_state["authenticated"]:
+        st.success(
+            f"{st.session_state['login_method']} ログイン済みです。アプリを利用できます。"
+        )
+        if st.button("ログアウト", use_container_width=True):
+            st.session_state["authenticated"] = False
+            st.session_state["login_method"] = ""
+        else:
+            return True
+
+    if missing_auth:
+        st.error(
+            "ログイン設定が不足しています。AUTH_SECRET, AUTH_USERNAME_ENC, "
+            "AUTH_PASSWORD_ENC を環境変数に設定してください。"
+        )
+
+    cols = st.columns(2)
+    with cols[0]:
+        with st.form("password_login"):
+            username_input = st.text_input("ユーザー名", value="")
+            password_input = st.text_input("パスワード", type="password", value="")
+            submitted = st.form_submit_button("ユーザー名とパスワードでログイン", use_container_width=True)
+
+        if submitted:
+            if verify_password_login(username_input, password_input, settings):
+                st.session_state["authenticated"] = True
+                st.session_state["login_method"] = "パスワード"
+                st.rerun()
+            else:
+                st.error("ユーザー名またはパスワードが正しくありません。")
+
+    with cols[1]:
+        with st.form("passkey_login"):
+            passkey_input = st.text_input("パスキー", type="password")
+            submitted = st.form_submit_button("パスキーでログイン", use_container_width=True)
+
+        if submitted:
+            if verify_passkey(passkey_input, settings):
+                st.session_state["authenticated"] = True
+                st.session_state["login_method"] = "パスキー"
+                st.rerun()
+            else:
+                st.error("パスキーが認証できませんでした。事前に登録してください。")
+
+    return st.session_state["authenticated"]
+
+
+def render_passkey_registration(settings: Dict[str, Optional[str]]):
+    if not st.session_state.get("authenticated"):
+        return
+
+    if st.session_state.get("login_method") != "パスワード":
+        st.info("パスキーの登録や更新はユーザー名/パスワードでログイン後に行えます。")
+        return
+
+    if not settings.get("auth_secret"):
+        st.warning("パスキー登録には AUTH_SECRET の設定が必要です。")
+        return
+
+    with st.expander("パスキーを登録/更新する", expanded=False):
+        with st.form("register_passkey"):
+            new_passkey = st.text_input(
+                "新しいパスキー", type="password", help="再ログイン時に入力する任意の文字列です。"
+            )
+            submitted = st.form_submit_button("パスキーを保存", use_container_width=True)
+
+        if submitted:
+            if not new_passkey:
+                st.error("パスキーを入力してください。")
+            else:
+                st.session_state["registered_passkey_hash"] = hash_passkey(
+                    new_passkey, settings["auth_secret"]
+                )
+                st.success("パスキーを登録しました。次回以降はパスキーでログインできます。")
+
+        if st.session_state.get("registered_passkey_hash"):
+            st.caption("現在パスキーが登録されています。")
+
+
+def render_app_body(
+    settings: Dict[str, Optional[str]], property_names: Dict[str, str]
+):
+    uploaded_files = st.file_uploader(
+        "名刺画像をアップロード (最大2枚)",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+    )
+
+    if uploaded_files and len(uploaded_files) > 2:
+        st.error("アップロードできるのは最大2枚までです。")
+        uploaded_files = uploaded_files[:2]
+
+    action_col, note_col = st.columns([1.2, 1])
+    with action_col:
+        run_analysis = st.button("AIで解析してNotionに登録", use_container_width=True)
+    with note_col:
+        st.info("ログイン中のみ実行できます。抽出結果は画面下部に表示されます。")
+
+    if not run_analysis:
+        return
+
+    if not uploaded_files:
+        st.error("少なくとも1枚の名刺画像をアップロードしてください。")
+        return
+
+    missing = [k for k, v in settings.items() if not v]
+    if missing:
+        st.error("必要な設定が不足しています。環境変数を確認してください。")
+        return
+
+    try:
+        with st.spinner("OpenAI で解析中..."):
+            client = create_openai_client(settings["openai_api_key"])
+            contact_data = extract_contact_data(client, uploaded_files)
+
+        st.subheader("抽出結果")
+        st.json(contact_data)
+
+        with st.spinner("Notion に送信中..."):
+            response = save_to_notion(
+                settings["notion_api_key"],
+                settings["notion_data_source_id"],
+                settings["notion_version"],
+                contact_data,
+                property_names,
+            )
+
+        if response.status_code in {200, 201}:
+            notion_url = response.json().get("url", "")
+            st.success("Notion への登録が完了しました。")
+            if notion_url:
+                st.markdown(f"[作成されたページを開く]({notion_url})")
+        else:
+            st.error(
+                "Notion API への送信に失敗しました。" f" (status: {response.status_code})"
+            )
+            try:
+                st.code(response.json(), language="json")
+            except Exception:
+                st.text(response.text)
+    except Exception as exc:  # pragma: no cover - handled in UI
+        st.error(f"エラーが発生しました: {exc}")
+
+
 def main():
     st.set_page_config(page_title="名刺スキャナ (OpenAI → Notion)", page_icon="🪪")
     st.title("名刺スキャナ (OpenAI → Notion)")
@@ -272,58 +490,15 @@ def main():
     property_names = load_property_config()
     show_settings_warning(settings)
 
-    uploaded_files = st.file_uploader(
-        "名刺画像をアップロード (最大2枚)",
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True,
-    )
+    authenticated = render_authentication(settings)
 
-    if uploaded_files and len(uploaded_files) > 2:
-        st.error("アップロードできるのは最大2枚までです。")
-        uploaded_files = uploaded_files[:2]
+    if not authenticated:
+        st.info("ログインすると名刺スキャン機能が利用できます。")
+        return
 
-    if st.button("AIで解析してNotionに登録"):
-        if not uploaded_files:
-            st.error("少なくとも1枚の名刺画像をアップロードしてください。")
-            return
-
-        missing = [k for k, v in settings.items() if not v]
-        if missing:
-            st.error("必要な設定が不足しています。環境変数を確認してください。")
-            return
-
-        try:
-            with st.spinner("OpenAI で解析中..."):
-                client = create_openai_client(settings["openai_api_key"])
-                contact_data = extract_contact_data(client, uploaded_files)
-
-            st.subheader("抽出結果")
-            st.json(contact_data)
-
-            with st.spinner("Notion に送信中..."):
-                response = save_to_notion(
-                    settings["notion_api_key"],
-                    settings["notion_data_source_id"],
-                    settings["notion_version"],
-                    contact_data,
-                    property_names,
-                )
-
-            if response.status_code in {200, 201}:
-                notion_url = response.json().get("url", "")
-                st.success("Notion への登録が完了しました。")
-                if notion_url:
-                    st.markdown(f"[作成されたページを開く]({notion_url})")
-            else:
-                st.error(
-                    "Notion API への送信に失敗しました。" f" (status: {response.status_code})"
-                )
-                try:
-                    st.code(response.json(), language="json")
-                except Exception:
-                    st.text(response.text)
-        except Exception as exc:  # pragma: no cover - handled in UI
-            st.error(f"エラーが発生しました: {exc}")
+    render_passkey_registration(settings)
+    st.divider()
+    render_app_body(settings, property_names)
 
 
 if __name__ == "__main__":
