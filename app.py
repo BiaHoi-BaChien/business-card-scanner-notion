@@ -282,7 +282,7 @@ def main():
         st.error("アップロードできるのは最大2枚までです。")
         uploaded_files = uploaded_files[:2]
 
-    if st.button("AIで解析してNotionに登録"):
+    if st.button("AIで解析"):
         if not uploaded_files:
             st.error("少なくとも1枚の名刺画像をアップロードしてください。")
             return
@@ -297,8 +297,25 @@ def main():
                 client = create_openai_client(settings["openai_api_key"])
                 contact_data = extract_contact_data(client, uploaded_files)
 
-            st.subheader("抽出結果")
-            st.json(contact_data)
+            st.session_state["contact_data"] = contact_data
+            st.session_state["confirm_notion"] = False
+            st.success("OpenAI での抽出が完了しました。内容を確認してください。")
+        except Exception as exc:  # pragma: no cover - handled in UI
+            st.error(f"エラーが発生しました: {exc}")
+
+    contact_data = st.session_state.get("contact_data")
+    if contact_data:
+        st.subheader("抽出結果")
+        st.json(contact_data)
+
+        confirm = st.checkbox(
+            "この内容でNotionに登録してもよい", key="confirm_notion"
+        )
+        if st.button("Notionに登録", disabled=not confirm):
+            missing = [k for k, v in settings.items() if not v]
+            if missing:
+                st.error("必要な設定が不足しています。環境変数を確認してください。")
+                return
 
             with st.spinner("Notion に送信中..."):
                 response = save_to_notion(
@@ -316,14 +333,13 @@ def main():
                     st.markdown(f"[作成されたページを開く]({notion_url})")
             else:
                 st.error(
-                    "Notion API への送信に失敗しました。" f" (status: {response.status_code})"
+                    "Notion API への送信に失敗しました。"
+                    f" (status: {response.status_code})"
                 )
                 try:
                     st.code(response.json(), language="json")
                 except Exception:
                     st.text(response.text)
-        except Exception as exc:  # pragma: no cover - handled in UI
-            st.error(f"エラーが発生しました: {exc}")
 
 
 if __name__ == "__main__":
