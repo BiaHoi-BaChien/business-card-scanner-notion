@@ -15,10 +15,10 @@
    php artisan key:generate
    ```
    - `There are no commands defined in the "key" namespace.` が表示される場合は、`vendor/` ディレクトリが存在せず Laravel コマンドが読み込まれていません。先に `composer install` を実行し、依存関係をダウンロードしてから再度お試しください。
-4. ローカルサーバーを起動します（`--host` や `--port` で任意指定も可能）。
+4. ローカルサーバーを起動します（デフォルトは `http://127.0.0.1:8000/`。`--host` や `--port` で任意指定も可能）。
    ```bash
    php artisan serve
-   # 例: php artisan serve --host=0.0.0.0 --port=8080
+   # 例: php artisan serve --host=0.0.0.0 --port=8000
    ```
 
 5. ブラウザで `http://localhost:8000/` にアクセスすると、ログインから Notion 登録までを操作できる Web 画面が表示されます。
