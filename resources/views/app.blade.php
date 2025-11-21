@@ -80,14 +80,14 @@
         <h2>ログイン</h2>
         <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
         <div class="stack">
-            <form id="login-form">
+            <form id="login-form" method="post">
                 <label for="login-username">ユーザー名</label>
                 <input id="login-username" type="text" name="username" placeholder="ユーザー名" required>
                 <label for="login-password">パスワード</label>
                 <input id="login-password" type="password" name="password" placeholder="パスワード" required>
                 <button type="submit">ログイン</button>
             </form>
-            <form id="passkey-login-form" class="row">
+            <form id="passkey-login-form" class="row" method="post">
                 <div>
                     <label for="passkey-login">パスキーでログイン</label>
                     <input id="passkey-login" type="password" name="passkey" placeholder="登録済みパスキー" required>
@@ -108,7 +108,7 @@
             <details class="accordion" id="passkey-accordion">
                 <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
                 <div class="accordion-body" id="passkey-accordion-body">
-                    <form id="passkey-register-form" class="row">
+                    <form id="passkey-register-form" class="row" method="post">
                         <div>
                             <label for="passkey-register">登録するパスキー</label>
                             <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
