@@ -125,21 +125,25 @@
                 </form>
             </div>
 
-    <section>
-        <h2>名刺画像から抽出</h2>
-        <form id="extract-form">
-            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
-            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
-            <button type="submit">抽出を実行</button>
-        </form>
-    </section>
-
-    <section>
-        <h2>Notion 連携</h2>
-        <form id="notion-create-form">
-            <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
-            <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
-        </form>
+            <div>
+                <h3>Notion 連携</h3>
+                <form id="notion-create-form">
+                    <label for="contact-json">contact JSON</label>
+                    <textarea id="contact-json" required>{
+  "name": "山田 太郎",
+  "company": "Example 株式会社",
+  "website": "https://example.com",
+  "email": "taro@example.com",
+  "phone_number_1": "+81-3-1234-5678",
+  "phone_number_2": "",
+  "industry": "IT"
+}</textarea>
+                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+                    <button type="submit">Notion ページ作成</button>
+                </form>
+            </div>
+        </div>
     </section>
 
 </main>
@@ -191,12 +195,9 @@
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        responseSection.classList.toggle('hidden', !appState.authenticated);
-        if (authNotice) {
-            authNotice.textContent = appState.authenticated
-                ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
-                : 'セッションを開始するためにログインしてください。';
-        }
+        authNotice.textContent = appState.authenticated
+            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
+            : 'セッションを開始するためにログインしてください。';
 
         extractionStatus.textContent = appState.contact
             ? '解析結果を確認し、Notion 登録に進めます。'
