@@ -23,6 +23,7 @@ return [
 
     'providers' => [
         Illuminate\Pagination\PaginationServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
         Illuminate\Session\SessionServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
 
