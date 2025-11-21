@@ -280,7 +280,10 @@
         if (contactJsonInput) {
             contactJsonInput.value = contactJsonDefault;
         }
-        document.getElementById('attachments')?.value = '';
+        const attachmentsInput = document.getElementById('attachments');
+        if (attachmentsInput) {
+            attachmentsInput.value = '';
+        }
 
         if (responseView) {
             responseView.textContent = responseDefault;
