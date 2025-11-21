@@ -49,7 +49,6 @@
 
     <section id="login-section">
         <h2>ログイン</h2>
-        <div class="status-box" id="auth-notice">セッションを開始するためにログインしてください。</div>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -125,7 +124,6 @@
 </main>
 <script>
     const responseView = document.getElementById('response-view');
-    const authNotice = document.getElementById('auth-notice');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
     const extractionStatus = document.getElementById('extraction-status');
@@ -146,10 +144,6 @@
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        authNotice.textContent = appState.authenticated
-            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
-            : 'セッションを開始するためにログインしてください。';
-
         extractionStatus.textContent = appState.contact
             ? '解析結果を確認し、Notion 登録に進めます。'
             : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
