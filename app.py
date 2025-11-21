@@ -215,6 +215,16 @@ def build_notion_properties(
     """Build Notion property payload, skipping empty values."""
     properties: Dict[str, dict] = {}
 
+    def sanitize_select_option(value: str) -> str:
+        """Sanitize select option labels for Notion.
+
+        The Notion API rejects select options that contain commas. Replace
+        commas with the Japanese comma (、) to preserve readability while
+        keeping the value valid.
+        """
+
+        return value.replace(",", "、").strip()
+
     def add_property(name: str, value: Optional[str], builder):
         if value:
             properties[name] = builder(value)
@@ -227,7 +237,7 @@ def build_notion_properties(
     add_property(
         property_names["company"],
         data.get("company"),
-        lambda v: {"select": {"name": v}},
+        lambda v: {"select": {"name": sanitize_select_option(v)}},
     )
     add_property(
         property_names["website"],
