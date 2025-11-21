@@ -12,6 +12,7 @@ Route::post('/passkey/register', [PasskeyController::class, 'register'])->middle
 Route::post('/passkey/login', [PasskeyController::class, 'login']);
 
 Route::middleware('auth.session')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/extract', [ExtractionController::class, 'extract']);
     Route::post('/notion/create', [NotionController::class, 'create']);
 });

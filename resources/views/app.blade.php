@@ -60,7 +60,10 @@
 
     <section id="post-login-section" class="hidden">
         <h2>ログイン後の操作</h2>
-        <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
+        <div class="row" style="justify-content: space-between; align-items: center;">
+            <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
+            <button id="logout-button" type="button">ログアウト</button>
+        </div>
         <div class="stack">
             <div>
                 <h3>パスキーの登録 / 更新</h3>
@@ -129,6 +132,7 @@
     const notionSubmit = document.getElementById('notion-submit');
     const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
+    const logoutButton = document.getElementById('logout-button');
     const appState = {
         authenticated: false,
         contact: null,
@@ -228,6 +232,19 @@
             appState.contact = null;
             showResponse(data);
             await refreshAuthState();
+        } catch (err) {
+            showResponse(err);
+        }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+        try {
+            const data = await postJson('/api/logout', {});
+            appState.authenticated = false;
+            appState.contact = null;
+            appState.hasPasskey = false;
+            showResponse(data);
+            updateUi();
         } catch (err) {
             showResponse(err);
         }
