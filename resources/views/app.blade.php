@@ -92,9 +92,6 @@
 <header>
     <h1>
         Business Card Scanner for Notion
-        <small class="muted" id="build-version" data-build-version="{{ $buildVersion ?? 'dev' }}">
-            v{{ $buildVersion ?? 'dev' }}
-        </small>
     </h1>
 </header>
 <main>
@@ -200,7 +197,6 @@
     const passkeyRegisteredBadge = document.getElementById('passkey-registered-badge');
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
-    const buildVersionEl = document.getElementById('build-version');
     const responseSection = document.getElementById('response-section');
     const responseView = document.getElementById('response-view');
     const resetScreenButton = document.getElementById('reset-screen');
@@ -256,30 +252,6 @@
             contactJsonInput.value = contactJsonDefault;
         }
     }
-
-    function renderBuildVersion(version) {
-        if (!buildVersionEl) return;
-        buildVersionEl.textContent = `v${version}`;
-    }
-
-    async function fetchBuildVersion() {
-        try {
-            const res = await fetch('/api/version');
-            const json = await res.json();
-            const version = json.build_version || json.version;
-            if (version) {
-                renderBuildVersion(version);
-            }
-        } catch (err) {
-            console.error('Failed to fetch build version', err);
-        }
-    }
-
-    if (buildVersionEl?.dataset.buildVersion) {
-        renderBuildVersion(buildVersionEl.dataset.buildVersion);
-    }
-
-    fetchBuildVersion();
 
     function showResponse(data) {
         if (!responseView || !responseSection) {
