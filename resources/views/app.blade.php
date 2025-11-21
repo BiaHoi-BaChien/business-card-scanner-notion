@@ -91,20 +91,11 @@
                 </form>
             </div>
 
-    <section>
-        <h2>名刺画像から抽出</h2>
-        <form id="extract-form">
-            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
-            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
-            <button type="submit">抽出を実行</button>
-        </form>
-    </section>
-
-    <section>
-        <h2>Notion 連携</h2>
-        <form id="notion-create-form">
-            <label for="contact-json">contact JSON</label>
-            <textarea id="contact-json" required>{
+            <div>
+                <h3>Notion 連携</h3>
+                <form id="notion-create-form">
+                    <label for="contact-json">contact JSON</label>
+                    <textarea id="contact-json" required>{
   "name": "山田 太郎",
   "company": "Example 株式会社",
   "website": "https://example.com",
@@ -113,16 +104,18 @@
   "phone_number_2": "",
   "industry": "IT"
 }</textarea>
-            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-            <button type="submit">Notion ページ作成</button>
-        </form>
-    </section>
+                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+                    <button type="submit">Notion ページ作成</button>
+                </form>
+            </div>
+        </div>
 
-    <section id="response-section" class="hidden">
-        <h2>レスポンス</h2>
-        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-        <pre id="response-view">まだレスポンスはありません。</pre>
+        <section id="response-section" class="hidden">
+            <h2>レスポンス</h2>
+            <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
+            <pre id="response-view">まだレスポンスはありません。</pre>
+        </section>
     </section>
 </main>
 <script>
