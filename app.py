@@ -407,11 +407,9 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
 
 
 def render_passkey_registration(settings: Dict[str, Optional[str]]):
-    if not st.session_state.get("authenticated"):
-        return
-
-    if st.session_state.get("login_method") != "パスワード":
-        st.info("パスキーの登録や更新はユーザー名/パスワードでログイン後に行えます。")
+    if not st.session_state.get("authenticated") or st.session_state.get(
+        "login_method"
+    ) != "パスワード":
         return
 
     if not settings.get("auth_secret"):
