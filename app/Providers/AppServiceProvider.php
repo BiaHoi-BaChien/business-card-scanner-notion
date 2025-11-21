@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,21 @@ class AppServiceProvider extends ServiceProvider
             return (string) $configured;
         }
 
+        $stored = $this->readStoredVersion();
+        if ($stored !== null) {
+            return $stored;
+        }
+
+        $gitVersion = $this->generateGitVersion();
+        if ($gitVersion !== null) {
+            return $gitVersion;
+        }
+
+        return 'dev';
+    }
+
+    protected function readStoredVersion(): ?string
+    {
         $storagePath = storage_path('app/build_version.json');
         if (file_exists($storagePath)) {
             $payload = json_decode((string) file_get_contents($storagePath), true);
@@ -35,6 +51,16 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        return 'dev';
+        return null;
+    }
+
+    protected function generateGitVersion(): ?string
+    {
+        $shortCommit = trim((string) shell_exec('git rev-parse --short HEAD'));
+        if ($shortCommit === '') {
+            return null;
+        }
+
+        return sprintf('%s-%s', Carbon::now()->format('Ymd'), $shortCommit);
     }
 }
