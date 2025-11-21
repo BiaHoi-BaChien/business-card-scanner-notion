@@ -10,14 +10,15 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['daily'],
             'ignore_exceptions' => false,
         ],
 
-        'single' => [
-            'driver' => 'single',
+        'daily' => [
+            'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', Level::Debug->name),
+            'days' => 14,
         ],
 
         'stderr' => [
