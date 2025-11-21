@@ -14,6 +14,7 @@ Route::post('/passkey/login', [PasskeyController::class, 'login']);
 Route::get('/version', [VersionController::class, 'show']);
 
 Route::middleware('auth.session')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/extract', [ExtractionController::class, 'extract']);
     Route::post('/notion/create', [NotionController::class, 'create']);
 });
