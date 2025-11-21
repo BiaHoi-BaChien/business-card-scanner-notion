@@ -6,6 +6,7 @@
 /public/storage
 /storage/*.key
 /storage/app/public
+/storage/framework/sessions/
 /storage/logs/
 /bootstrap/cache/
 
