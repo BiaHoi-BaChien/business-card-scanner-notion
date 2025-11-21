@@ -493,6 +493,9 @@ def render_app_body(
         confirm = st.checkbox(
             "この内容でNotionに登録してもよい", key="confirm_notion"
         )
+
+        st.caption("写真は Notion には保存されず、抽出した文字情報のみ登録します。")
+
         if st.button("Notionに登録", disabled=not confirm):
             missing = [k for k, v in settings.items() if not v]
             if missing:
@@ -507,8 +510,6 @@ def render_app_body(
             if not is_valid:
                 st.error(message)
                 return
-
-            st.info("写真は Notion には保存されず、抽出した文字情報のみ登録します。")
 
             with st.spinner("Notion に送信中..."):
                 try:
