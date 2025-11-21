@@ -48,7 +48,7 @@
             <form id="passkey-login-form" class="row">
                 <div>
                     <label for="passkey-login">パスキーでログイン</label>
-                    <input id="passkey-login" type="text" name="passkey" placeholder="登録済みパスキー" required>
+                    <input id="passkey-login" type="password" name="passkey" placeholder="登録済みパスキー" required>
                 </div>
                 <div style="align-self: end;">
                     <button type="submit">パスキーでログイン</button>
@@ -67,7 +67,7 @@
                 <form id="passkey-register-form" class="row">
                     <div>
                         <label for="passkey-register">登録するパスキー</label>
-                        <input id="passkey-register" type="text" name="passkey" placeholder="例: my-device-passkey" required>
+                        <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
                     </div>
                     <div style="align-self: end;">
                         <button type="submit">パスキー登録</button>
