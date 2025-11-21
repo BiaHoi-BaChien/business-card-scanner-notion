@@ -333,8 +333,13 @@
         submitExtraction(extractImagesInput.files);
     }
 
+    function handleDocumentDrop(e) {
+        e.preventDefault();
+        dropZone?.classList.remove('dragover');
+    }
+
     document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDrop);
+    document.addEventListener('drop', handleDocumentDrop);
     document.addEventListener('dragleave', handleDragLeave);
     dropZone?.addEventListener('dragover', handleDragOver);
     dropZone?.addEventListener('drop', handleDrop);
