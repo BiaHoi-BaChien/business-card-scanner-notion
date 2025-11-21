@@ -20,6 +20,8 @@ class NotionController extends Controller
     /** @throws GuzzleException */
     public function create(Request $request): JsonResponse
     {
+        $settings = $this->settings();
+
         $body = $request->validate([
             'contact' => 'required|array',
             'contact.name' => 'required|string',
@@ -36,9 +38,13 @@ class NotionController extends Controller
         $contact = $body['contact'];
         $attachments = $body['attachments'] ?? [];
 
+        if (empty($settings['notion_data_source_id'])) {
+            return response()->json(['error' => 'NOTION_DATA_SOURCE_ID is not configured'], 500);
+        }
+
         $properties = $this->propertyConfigService->load(base_path());
-        $payload = $this->notionService->buildPayload($contact, $properties);
-        $client = $this->notionService->createClient($this->settings());
+        $payload = $this->notionService->buildPayload($contact, $properties, $settings['notion_data_source_id']);
+        $client = $this->notionService->createClient($settings);
         try {
             $page = $this->notionService->createPage($client, $payload, $attachments);
         } catch (RuntimeException $exception) {
