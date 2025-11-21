@@ -93,7 +93,7 @@
                     <input id="passkey-login" type="password" name="passkey" placeholder="登録済みパスキー" required>
                 </div>
                 <div style="align-self: end;">
-                    <button type="submit">パスキーでログイン</button>
+                    <button id="passkey-login-button" type="button">パスキーでログイン</button>
                 </div>
             </form>
             <p class="muted">アカウントに紐づくパスキーを登録済みの場合はこちらからログインできます。</p>
@@ -362,9 +362,16 @@
         }
     });
 
-    document.getElementById('passkey-login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const passkey = document.getElementById('passkey-login').value;
+    async function handlePasskeyLogin(event) {
+        event?.preventDefault();
+        event?.stopPropagation();
+
+        const passkey = document.getElementById('passkey-login')?.value;
+        if (!passkey) {
+            showResponse({ error: 'パスキーを入力してください。' });
+            return false;
+        }
+
         try {
             const data = await postJson('/api/passkey/login', { passkey });
             appState.authenticated = true;
@@ -374,7 +381,12 @@
         } catch (err) {
             showResponse(err);
         }
-    });
+
+        return false;
+    }
+
+    document.getElementById('passkey-login-form')?.addEventListener('submit', handlePasskeyLogin);
+    document.getElementById('passkey-login-button')?.addEventListener('click', handlePasskeyLogin);
 
     const extractForm = document.getElementById('extract-form');
     const extractImagesInput = document.getElementById('extract-images');
