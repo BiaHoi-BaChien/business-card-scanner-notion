@@ -11,6 +11,38 @@
         section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         h1 { margin: 0 0 8px; font-size: 24px; }
         h2 { margin-top: 0; font-size: 18px; }
+        .accordion {
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .accordion summary {
+            cursor: pointer;
+            padding: 12px 14px;
+            font-weight: 700;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .accordion summary::-webkit-details-marker {
+            display: none;
+        }
+        .accordion summary::after {
+            content: '＋';
+            font-weight: 900;
+            color: #475569;
+        }
+        .accordion[open] summary::after {
+            content: '－';
+        }
+        .accordion .accordion-body {
+            padding: 0 14px 14px;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
         p { margin: 4px 0 12px; line-height: 1.6; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
         input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
@@ -28,6 +60,9 @@
         .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #e2e8f0; border-radius: 9999px; font-size: 13px; }
         .pill small { color: #475569; font-weight: 600; }
         .stack { display: grid; gap: 12px; }
+        .drop-zone { margin-top: 12px; padding: 14px; border: 2px dashed #94a3b8; border-radius: 12px; background: #f8fafc; color: #475569; text-align: center; transition: background 0.2s, border-color 0.2s, color 0.2s; }
+        .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
+        .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
     </style>
 </head>
 <body>
@@ -43,6 +78,7 @@
     <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
     <section id="login-section">
         <h2>ログイン</h2>
+        <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -66,21 +102,24 @@
 
     <section id="post-login-section" class="hidden">
         <h2>ログイン後の操作</h2>
+        <p id="auth-notice" class="status-box">セッションを開始するためにログインしてください。</p>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
-            <div>
-                <h3>パスキーの登録 / 更新</h3>
-                <form id="passkey-register-form" class="row">
-                    <div>
-                        <label for="passkey-register">登録するパスキー</label>
-                        <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
-                    </div>
-                    <div style="align-self: end;">
-                        <button type="submit">パスキー登録</button>
-                    </div>
-                </form>
-                <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
-            </div>
+            <details class="accordion" id="passkey-accordion">
+                <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
+                <div class="accordion-body" id="passkey-accordion-body">
+                    <form id="passkey-register-form" class="row">
+                        <div>
+                            <label for="passkey-register">登録するパスキー</label>
+                            <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
+                        </div>
+                        <div style="align-self: end;">
+                            <button type="submit">パスキー登録</button>
+                        </div>
+                    </form>
+                    <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
+                </div>
+            </details>
 
             <div>
                 <h3>名刺画像から抽出</h3>
@@ -90,6 +129,10 @@
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <button type="submit">API による解析を実行</button>
                 </form>
+                <div id="drop-zone" class="drop-zone">
+                    ここに画像ファイルをドラッグ＆ドロップ
+                    <small>画像のみ対応・最大 2 枚まで</small>
+                </div>
             </div>
 
     <section>
@@ -129,14 +172,17 @@
     </section>
 </main>
 <script>
-    const responseView = document.getElementById('response-view');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
+    const authNotice = document.getElementById('auth-notice');
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
+    const notionConfirm = document.getElementById('notion-confirm');
     const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
+    const passkeyAccordion = document.getElementById('passkey-accordion');
+    const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const buildVersionEl = document.getElementById('build-version');
     const authNotice = document.getElementById('auth-notice');
     const resetScreenButton = document.getElementById('reset-screen');
@@ -149,7 +195,6 @@
         contact: null,
         hasPasskey: false,
     };
-    const responseSection = document.getElementById('response-section');
 
     function renderBuildVersion(version) {
         if (!buildVersionEl) return;
@@ -176,8 +221,7 @@
     fetchBuildVersion();
 
     function showResponse(data) {
-        responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-        responseSection.classList.remove('hidden');
+        console.log('Response:', data);
     }
 
     function updateUi() {
@@ -251,6 +295,11 @@
         updateUi();
     }
 
+    passkeyAccordion?.addEventListener('toggle', () => {
+        if (!passkeyAccordionSummary) return;
+        passkeyAccordionSummary.setAttribute('aria-expanded', passkeyAccordion.open ? 'true' : 'false');
+    });
+
     async function postJson(url, body) {
         const res = await fetch(url, {
             method: 'POST',
@@ -321,17 +370,26 @@
         }
     });
 
-    document.getElementById('extract-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const files = document.getElementById('extract-images').files;
-        if (!files.length) {
+    const extractForm = document.getElementById('extract-form');
+    const extractImagesInput = document.getElementById('extract-images');
+    const dropZone = document.getElementById('drop-zone');
+
+    function buildExtractionFormData(files) {
+        const formData = new FormData();
+        Array.from(files).slice(0, 2).forEach((file, idx) => {
+            formData.append('images[]', file, file.name || `image-${idx + 1}`);
+        });
+        return formData;
+    }
+
+    async function submitExtraction(files) {
+        const selectedFiles = files && files.length ? files : extractImagesInput.files;
+        if (!selectedFiles.length) {
             showResponse({ error: '画像ファイルを選択してください' });
             return;
         }
-        const formData = new FormData();
-        Array.from(files).slice(0, 2).forEach((file, idx) => formData.append('images[]', file, file.name || `image-${idx + 1}`));
         try {
-            const res = await fetch('/api/extract', { method: 'POST', body: formData, credentials: 'include' });
+            const res = await fetch('/api/extract', { method: 'POST', body: buildExtractionFormData(selectedFiles), credentials: 'include' });
             const json = await res.json();
             if (!res.ok) throw json;
             appState.contact = json.contact || null;
@@ -340,15 +398,28 @@
         } catch (err) {
             showResponse(err);
         }
+    }
+
+    extractForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await submitExtraction(extractImagesInput.files);
     });
+
+    notionConfirm.addEventListener('change', updateUi);
 
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const hasContact = Boolean(appState.contact);
+        if (!hasContact || !notionConfirm.checked) {
+            showResponse({ error: '解析済みデータと確認チェックが必要です。' });
+            return;
+        }
         try {
-            const contact = JSON.parse(document.getElementById('contact-json').value || '{}');
-            const attachmentsRaw = document.getElementById('attachments').value.trim();
-            const attachments = attachmentsRaw ? attachmentsRaw.split(/\n+/).filter(Boolean) : [];
-            const data = await postJson('/api/notion/create', { contact, attachments });
+            if (!appState.contact) {
+                showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
+                return;
+            }
+            const data = await postJson('/api/notion/create', { contact: appState.contact, attachments: [] });
             showResponse(data);
         } catch (err) {
             showResponse(err);
