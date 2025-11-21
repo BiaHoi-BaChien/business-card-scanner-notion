@@ -287,9 +287,7 @@
         }
 
         if (extractionStatus) {
-            extractionStatus.textContent = appState.contact
-                ? '解析結果を確認し、Notion 登録に進めます。'
-                : extractionDefault;
+            extractionStatus.textContent = extractionDefault;
         }
 
         if (contactJsonInput && notionReady) {
