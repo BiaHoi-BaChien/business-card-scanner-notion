@@ -7,7 +7,8 @@ use App\Http\Controllers\PasskeyController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/passkey/register', [PasskeyController::class, 'register']);
+Route::get('/auth/status', [AuthController::class, 'status']);
+Route::post('/passkey/register', [PasskeyController::class, 'register'])->middleware('auth.session');
 Route::post('/passkey/login', [PasskeyController::class, 'login']);
 
 Route::middleware('auth.session')->group(function () {
