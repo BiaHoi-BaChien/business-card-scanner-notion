@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
      * The Artisan commands provided by your application.
      */
     protected $commands = [
+        Commands\BuildVersionCommand::class,
         Commands\ServeCommand::class,
     ];
 

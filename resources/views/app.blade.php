@@ -32,7 +32,12 @@
 </head>
 <body>
 <header>
-    <h1>Business Card Scanner for Notion</h1>
+    <h1>
+        Business Card Scanner for Notion
+        <small class="muted" id="build-version" data-build-version="{{ $buildVersion ?? 'dev' }}">
+            v{{ $buildVersion ?? 'dev' }}
+        </small>
+    </h1>
 </header>
 <main>
     <section id="login-section">
@@ -129,12 +134,37 @@
     const notionSubmit = document.getElementById('notion-submit');
     const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
+    const buildVersionEl = document.getElementById('build-version');
     const appState = {
         authenticated: false,
         contact: null,
         hasPasskey: false,
     };
     const responseSection = document.getElementById('response-section');
+
+    function renderBuildVersion(version) {
+        if (!buildVersionEl) return;
+        buildVersionEl.textContent = `v${version}`;
+    }
+
+    async function fetchBuildVersion() {
+        try {
+            const res = await fetch('/api/version');
+            const json = await res.json();
+            const version = json.build_version || json.version;
+            if (version) {
+                renderBuildVersion(version);
+            }
+        } catch (err) {
+            console.error('Failed to fetch build version', err);
+        }
+    }
+
+    if (buildVersionEl?.dataset.buildVersion) {
+        renderBuildVersion(buildVersionEl.dataset.buildVersion);
+    }
+
+    fetchBuildVersion();
 
     function showResponse(data) {
         responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
