@@ -25,6 +25,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
             user-select: none;
         }
         .accordion summary::-webkit-details-marker {
@@ -42,6 +43,22 @@
             padding: 0 14px 14px;
             border-top: 1px solid #e2e8f0;
             background: #fff;
+        }
+        .accordion .accordion-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1e3a8a;
+            font-size: 12px;
+            font-weight: 700;
         }
         p { margin: 4px 0 12px; line-height: 1.6; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
@@ -101,7 +118,7 @@
                     <button id="passkey-login-button" type="button">パスキーでログイン</button>
                 </div>
             </form>
-            <p class="muted">アカウントに紐づくパスキーを登録済みの場合はこちらからログインできます。</p>
+            <p class="muted" id="passkey-login-message">アカウントに紐づくパスキーを登録済みの場合はこちらからログインできます。</p>
         </div>
     </section>
 
@@ -112,11 +129,15 @@
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
-                <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
+                <summary aria-controls="passkey-accordion-body" aria-expanded="false">
+                    <span class="accordion-title">
+                        <span id="passkey-accordion-title">パスキーの登録</span>
+                        <span id="passkey-registered-badge" class="badge hidden">Passkey 登録済み</span>
+                    </span>
+                </summary>
                 <div class="accordion-body" id="passkey-accordion-body">
                     <form id="passkey-register-form" class="row" method="post" action="/api/passkey/register">
                         <div>
-                            <label for="passkey-register">登録するパスキー</label>
                             <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
                         </div>
                         <div style="align-self: end;">
@@ -176,7 +197,10 @@
     const passkeyState = document.getElementById('passkey-state');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
+    const passkeyAccordionTitle = document.getElementById('passkey-accordion-title');
+    const passkeyRegisteredBadge = document.getElementById('passkey-registered-badge');
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
+    const passkeyLoginMessage = document.getElementById('passkey-login-message');
     const buildVersionEl = document.getElementById('build-version');
     const responseSection = document.getElementById('response-section');
     const responseView = document.getElementById('response-view');
@@ -309,9 +333,17 @@
             passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
         }
 
-        if (passkeyRegisterNote) {
-            passkeyRegisterNote.classList.toggle('hidden', appState.hasPasskey);
+        if (passkeyAccordionTitle) {
+            passkeyAccordionTitle.textContent = appState.hasPasskey ? 'パスキーの更新' : 'パスキーの登録';
         }
+
+        if (passkeyRegisteredBadge) {
+            passkeyRegisteredBadge.classList.toggle('hidden', !appState.hasPasskey);
+        }
+
+        passkeyRegisterNote?.classList.toggle('hidden', appState.hasPasskey);
+
+        passkeyLoginMessage?.classList.toggle('hidden', appState.hasPasskey);
     }
 
     function resetUi(options = {}) {
