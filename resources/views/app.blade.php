@@ -518,17 +518,31 @@
             showResponse({ error: '画像ファイルを選択してください' });
             return;
         }
+
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 45000);
+
         try {
             setUiDisabled(true);
-            const res = await fetch('/api/extract', { method: 'POST', body: buildExtractionFormData(selectedFiles), credentials: 'include' });
+            const res = await fetch('/api/extract', {
+                method: 'POST',
+                body: buildExtractionFormData(selectedFiles),
+                credentials: 'include',
+                signal: abortController.signal,
+            });
             const json = await res.json();
             if (!res.ok) throw json;
             appState.contact = json.contact || null;
             showResponse(json);
             updateUi();
         } catch (err) {
-            showResponse(err);
+            if (err?.name === 'AbortError') {
+                showResponse({ error: '解析がタイムアウトしました。もう一度お試しください。' });
+            } else {
+                showResponse(err);
+            }
         } finally {
+            clearTimeout(timeoutId);
             setUiDisabled(false);
         }
     }
