@@ -68,7 +68,10 @@
         .row > div { flex: 1; }
         button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
         button:hover { background: #1d4ed8; }
+        #extract-form button { margin-top: 10px; }
+        #notion-submit:disabled { background: #cbd5e1; color: #0f172a; cursor: not-allowed; }
         .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
+        #logout-button { margin-bottom: 8px; }
         .button-danger { background: #b91c1c; }
         .button-danger:hover { background: #991b1b; }
         .muted { color: #475569; font-size: 14px; }
