@@ -11,6 +11,38 @@
         section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         h1 { margin: 0 0 8px; font-size: 24px; }
         h2 { margin-top: 0; font-size: 18px; }
+        .accordion {
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .accordion summary {
+            cursor: pointer;
+            padding: 12px 14px;
+            font-weight: 700;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .accordion summary::-webkit-details-marker {
+            display: none;
+        }
+        .accordion summary::after {
+            content: '＋';
+            font-weight: 900;
+            color: #475569;
+        }
+        .accordion[open] summary::after {
+            content: '－';
+        }
+        .accordion .accordion-body {
+            padding: 0 14px 14px;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
         p { margin: 4px 0 12px; line-height: 1.6; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
         input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
@@ -42,6 +74,7 @@
 <main>
     <section id="login-section">
         <h2>ログイン</h2>
+        <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -64,22 +97,23 @@
     </section>
 
     <section id="post-login-section" class="hidden">
-        <h2>ログイン後の操作</h2>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
-            <div>
-                <h3>パスキーの登録 / 更新</h3>
-                <form id="passkey-register-form" class="row">
-                    <div>
-                        <label for="passkey-register">登録するパスキー</label>
-                        <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
-                    </div>
-                    <div style="align-self: end;">
-                        <button type="submit">パスキー登録</button>
-                    </div>
-                </form>
-                <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
-            </div>
+            <details class="accordion" id="passkey-accordion">
+                <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
+                <div class="accordion-body" id="passkey-accordion-body">
+                    <form id="passkey-register-form" class="row">
+                        <div>
+                            <label for="passkey-register">登録するパスキー</label>
+                            <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
+                        </div>
+                        <div style="align-self: end;">
+                            <button type="submit">パスキー登録</button>
+                        </div>
+                    </form>
+                    <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
+                </div>
+            </details>
 
             <div>
                 <h3>名刺画像から抽出</h3>
@@ -112,28 +146,23 @@
         </div>
     </section>
 
-    <section id="response-section" class="hidden">
-        <h2>レスポンス</h2>
-        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-        <pre id="response-view">まだレスポンスはありません。</pre>
-    </section>
 </main>
 <script>
-    const responseView = document.getElementById('response-view');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
+    const authNotice = document.getElementById('auth-notice');
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
-    const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
+    const passkeyAccordion = document.getElementById('passkey-accordion');
+    const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const buildVersionEl = document.getElementById('build-version');
     const appState = {
         authenticated: false,
         contact: null,
         hasPasskey: false,
     };
-    const responseSection = document.getElementById('response-section');
 
     function renderBuildVersion(version) {
         if (!buildVersionEl) return;
@@ -160,8 +189,7 @@
     fetchBuildVersion();
 
     function showResponse(data) {
-        responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-        responseSection.classList.remove('hidden');
+        console.log('Response:', data);
     }
 
     function updateUi() {
@@ -175,17 +203,18 @@
             ? '解析結果を確認し、Notion 登録に進めます。'
             : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
 
-        if (appState.contact) {
-            contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
-            notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
-        } else {
-            contactJsonInput.value = '';
-            notionReady.textContent = '解析が成功すると Notion への登録ボタンが有効になります。';
-        }
+        notionReady.textContent = appState.contact
+            ? '解析済みデータを Notion に登録できます。内容を確認してください。'
+            : '解析が成功すると Notion への登録ボタンが有効になります。';
 
         notionSubmit.disabled = !appState.contact;
         passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
     }
+
+    passkeyAccordion?.addEventListener('toggle', () => {
+        if (!passkeyAccordionSummary) return;
+        passkeyAccordionSummary.setAttribute('aria-expanded', passkeyAccordion.open ? 'true' : 'false');
+    });
 
     async function postJson(url, body) {
         const res = await fetch(url, {
@@ -255,6 +284,19 @@
         }
     });
 
+    logoutButton.addEventListener('click', async () => {
+        try {
+            const data = await postJson('/api/logout', {});
+            appState.authenticated = false;
+            appState.contact = null;
+            appState.hasPasskey = false;
+            showResponse(data);
+            updateUi();
+        } catch (err) {
+            showResponse(err);
+        }
+    });
+
     document.getElementById('extract-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const files = document.getElementById('extract-images').files;
@@ -279,10 +321,11 @@
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-            const contact = JSON.parse(document.getElementById('contact-json').value || '{}');
-            const attachmentsRaw = document.getElementById('attachments').value.trim();
-            const attachments = attachmentsRaw ? attachmentsRaw.split(/\n+/).filter(Boolean) : [];
-            const data = await postJson('/api/notion/create', { contact, attachments });
+            if (!appState.contact) {
+                showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
+                return;
+            }
+            const data = await postJson('/api/notion/create', { contact: appState.contact, attachments: [] });
             showResponse(data);
         } catch (err) {
             showResponse(err);
