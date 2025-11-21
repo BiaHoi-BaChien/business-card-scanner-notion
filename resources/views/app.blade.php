@@ -125,7 +125,7 @@
         </form>
     </section>
 
-    <section>
+    <section id="response-section" class="hidden">
         <h2>レスポンス</h2>
         <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
         <pre id="response-view">まだレスポンスはありません。</pre>
@@ -145,14 +145,21 @@
         contact: null,
         hasPasskey: false,
     };
+    const responseSection = document.getElementById('response-section');
 
     function showResponse(data) {
         responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        responseSection.classList.remove('hidden');
     }
 
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
+        responseSection.classList.toggle('hidden', !appState.authenticated);
+        authNotice.textContent = appState.authenticated
+            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
+            : 'セッションを開始するためにログインしてください。';
+
         extractionStatus.textContent = appState.contact
             ? '解析結果を確認し、Notion 登録に進めます。'
             : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
