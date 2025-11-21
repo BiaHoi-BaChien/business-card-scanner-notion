@@ -120,7 +120,7 @@
                             <button type="submit">パスキー登録</button>
                         </div>
                     </form>
-                    <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
+                    <p class="muted" id="passkey-register-note">パスキーを登録すると、以後はパスキーだけでログインできます。</p>
                 </div>
             </details>
 
@@ -178,6 +178,7 @@
     const passkeyState = document.getElementById('passkey-state');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
+    const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const buildVersionEl = document.getElementById('build-version');
     const responseSection = document.getElementById('response-section');
     const responseView = document.getElementById('response-view');
@@ -255,6 +256,10 @@
 
         if (passkeyState) {
             passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
+        }
+
+        if (passkeyRegisterNote) {
+            passkeyRegisterNote.classList.toggle('hidden', appState.hasPasskey);
         }
     }
 
