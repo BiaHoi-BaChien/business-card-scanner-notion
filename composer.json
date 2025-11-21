@@ -20,6 +20,9 @@
         ],
         "post-create-project-cmd": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "build-version": [
+            "@php artisan app:build-version"
         ]
     },
     "config": {
