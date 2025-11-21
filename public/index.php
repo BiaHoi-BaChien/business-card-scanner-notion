@@ -4,6 +4,12 @@ use CardScanner\{buildNotionPayload, createNotionPage, extractContactData, hashP
 use GuzzleHttp\Exception\GuzzleException;
 
 require __DIR__ . '/../vendor/autoload.php';
+// Fallback for environments where the Composer autoloader has not been
+// regenerated yet (e.g., after cloning without running `composer install`).
+// This ensures the CardScanner helper functions are available.
+if (!function_exists('CardScanner\\loadEnv')) {
+    require_once __DIR__ . '/../src/bootstrap.php';
+}
 
 $root = realpath(__DIR__ . '/..');
 session_start();
