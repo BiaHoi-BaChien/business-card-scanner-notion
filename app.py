@@ -256,58 +256,16 @@ def build_notion_properties(
     return properties
 
 
-def ensure_select_option(
-    notion_api_key: str,
-    notion_version: str,
-    data_source_id: str,
-    property_name: str,
-    option_name: str,
-):
-    """Add a select option to the database if it does not already exist."""
-
-    url = f"https://api.notion.com/v1/databases/{data_source_id}"
-    headers = {
-        "Authorization": f"Bearer {notion_api_key}",
-        "Notion-Version": notion_version,
-        "Content-Type": "application/json",
-    }
-
-    response = requests.get(url, headers=headers, timeout=30)
-    if response.status_code != 200:
-        return
-
-    properties = response.json().get("properties", {})
-    select_property = properties.get(property_name)
-    if not select_property or select_property.get("type") != "select":
-        return
-
-    options = select_property.get("select", {}).get("options", [])
-    if any(option.get("name") == option_name for option in options):
-        return
-
-    updated_options = options + [{"name": option_name, "color": "default"}]
-    requests.patch(
-        url,
-        headers=headers,
-        json={
-            "properties": {
-                property_name: {"select": {"options": updated_options}},
-            }
-        },
-        timeout=30,
-    )
-
-
-def validate_notion_database_access(
+def validate_notion_data_source_access(
     notion_api_key: str, notion_version: str, data_source_id: str
 ) -> Tuple[bool, str]:
-    """Validate the Notion database access before posting a page.
+    """Validate the Notion data source access before posting a page.
 
     Returns a tuple of (is_valid, message). When ``is_valid`` is False, the
     message contains user-facing guidance.
     """
 
-    url = f"https://api.notion.com/v1/databases/{data_source_id}"
+    url = f"https://api.notion.com/v1/data_sources/{data_source_id}"
     headers = {
         "Authorization": f"Bearer {notion_api_key}",
         "Notion-Version": notion_version,
@@ -316,7 +274,7 @@ def validate_notion_database_access(
     try:
         response = requests.get(url, headers=headers, timeout=30)
     except requests.RequestException as exc:
-        return False, f"Notion データベースへの接続に失敗しました: {exc}"
+        return False, f"Notion データソースへの接続に失敗しました: {exc}"
 
     if response.status_code == 200:
         return True, ""
@@ -326,14 +284,9 @@ def validate_notion_database_access(
     except Exception:
         detail = response.text
 
-    if response.status_code == 404:
-        message = (
-            "Notion データベースが見つかりません。"
-            " データソースIDが正しいこと、および対象データベースが"
-            " インテグレーションに共有されていることを確認してください。"
-        )
-    else:
-        message = f"Notion データベースの取得に失敗しました (status: {response.status_code})。"
+    message = (
+        f"Notion データソースの取得に失敗しました (status: {response.status_code})。"
+    )
 
     return False, f"{message} 詳細: {detail}"
 
@@ -353,18 +306,8 @@ def save_to_notion(
         "Content-Type": "application/json",
     }
 
-    company_value = data.get("company")
-    if company_value:
-        ensure_select_option(
-            notion_api_key,
-            notion_version,
-            data_source_id,
-            property_names["company"],
-            company_value,
-        )
-
     payload = {
-        "parent": {"database_id": data_source_id},
+        "parent": {"data_source_id": data_source_id},
         "properties": build_notion_properties(data, property_names),
     }
 
@@ -538,7 +481,7 @@ def render_app_body(
                 st.error("必要な設定が不足しています。環境変数を確認してください。")
                 return
 
-            is_valid, message = validate_notion_database_access(
+            is_valid, message = validate_notion_data_source_access(
                 settings["notion_api_key"],
                 settings["notion_version"],
                 settings["notion_data_source_id"],
@@ -550,13 +493,17 @@ def render_app_body(
             st.info("写真は Notion には保存されず、抽出した文字情報のみ登録します。")
 
             with st.spinner("Notion に送信中..."):
-                response = save_to_notion(
-                    settings["notion_api_key"],
-                    settings["notion_data_source_id"],
-                    settings["notion_version"],
-                    contact_data,
-                    property_names,
-                )
+                try:
+                    response = save_to_notion(
+                        settings["notion_api_key"],
+                        settings["notion_data_source_id"],
+                        settings["notion_version"],
+                        contact_data,
+                        property_names,
+                    )
+                except requests.RequestException as exc:  # pragma: no cover - network
+                    st.error(f"Notion API への送信中にエラーが発生しました: {exc}")
+                    return
 
             if response.status_code in {200, 201}:
                 notion_url = response.json().get("url", "")
