@@ -114,14 +114,8 @@
         </form>
     </section>
 
-    <section id="response-section" class="hidden">
-        <h2>レスポンス</h2>
-        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-        <pre id="response-view">まだレスポンスはありません。</pre>
-    </section>
 </main>
 <script>
-    const responseView = document.getElementById('response-view');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
     const extractionStatus = document.getElementById('extraction-status');
@@ -134,17 +128,14 @@
         contact: null,
         hasPasskey: false,
     };
-    const responseSection = document.getElementById('response-section');
 
     function showResponse(data) {
-        responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-        responseSection.classList.remove('hidden');
+        console.log('Response:', data);
     }
 
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        responseSection.classList.toggle('hidden', !appState.authenticated);
         authNotice.textContent = appState.authenticated
             ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
             : 'セッションを開始するためにログインしてください。';
