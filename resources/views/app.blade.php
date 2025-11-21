@@ -71,6 +71,14 @@
         #login-form button { margin-top: 8px; }
         #extract-form button { margin-top: 10px; }
         #notion-submit:disabled { background: #cbd5e1; color: #0f172a; cursor: not-allowed; }
+        .form-error {
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid #fecdd3;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-weight: 700;
+        }
         .section-header { display: flex; align-items: flex-start; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
         .button-danger { background: #b91c1c; }
         .button-danger:hover { background: #991b1b; }
@@ -155,6 +163,7 @@
     <section id="login-section">
         <h2>ログイン</h2>
         <div class="stack">
+            <p id="login-error" class="form-error hidden" role="alert"></p>
             <form id="login-form" method="post" action="/api/login">
                 <label for="login-username">ユーザー名</label>
                 <input id="login-username" type="text" name="username" placeholder="ユーザー名" required>
@@ -254,6 +263,7 @@
     const passkeyRegisteredBadge = document.getElementById('passkey-registered-badge');
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
+    const loginErrorMessage = document.getElementById('login-error');
     const loadingOverlay = document.getElementById('loading-overlay');
     const toast = document.getElementById('toast');
     const loadingMessage = document.getElementById('loading-message');
@@ -324,6 +334,28 @@
 
     function showResponse(data) {
         console.log('Response:', data);
+    }
+
+    function setLoginError(message) {
+        if (!loginErrorMessage) return;
+        if (message) {
+            loginErrorMessage.textContent = message;
+            loginErrorMessage.classList.remove('hidden');
+        } else {
+            loginErrorMessage.textContent = '';
+            loginErrorMessage.classList.add('hidden');
+        }
+    }
+
+    function getErrorMessage(error, fallback = 'ログインに失敗しました。もう一度お試しください。') {
+        if (!error) return fallback;
+        if (typeof error === 'string') return error;
+        if (typeof error === 'object') {
+            if (error.error) return error.error;
+            if (error.message) return error.message;
+            if (error.statusText) return error.statusText;
+        }
+        return fallback;
     }
 
     function renderContactTable(contact) {
@@ -443,6 +475,8 @@
             notionReady.textContent = notionReadyDefault;
         }
 
+        setLoginError('');
+
         updateUi();
     }
 
@@ -501,9 +535,11 @@
             appState.authenticated = true;
             appState.contact = null;
             showResponse(data);
+            setLoginError('');
             await refreshAuthState();
         } catch (err) {
             showResponse(err);
+            setLoginError(getErrorMessage(err, 'ユーザー名またはパスワードが正しくありません。'));
         }
     });
 
@@ -527,6 +563,7 @@
         const passkey = document.getElementById('passkey-login')?.value;
         if (!passkey) {
             showResponse({ error: 'パスキーを入力してください。' });
+            setLoginError('パスキーを入力してください。');
             return false;
         }
 
@@ -535,9 +572,11 @@
             appState.authenticated = true;
             appState.contact = null;
             showResponse(data);
+            setLoginError('');
             await refreshAuthState();
         } catch (err) {
             showResponse(err);
+            setLoginError(getErrorMessage(err, 'パスキーでのログインに失敗しました。'));
         }
 
         return false;
