@@ -100,7 +100,6 @@
 <main>
     <section id="login-section">
         <h2>ログイン</h2>
-        <p class="muted">アカウント情報を入力してセッションを開始してください。</p>
         <div class="stack">
             <form id="login-form" method="post" action="/api/login">
                 <label for="login-username">ユーザー名</label>
