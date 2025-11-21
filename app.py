@@ -544,7 +544,7 @@ def render_app_body(
 def main():
     st.set_page_config(page_title="Business Card Scanner", page_icon="🪪")
 
-    st.title("名刺スキャナ (Notion 連携デモ)")
+    st.title("名刺スキャナ＆Notion登録")
     st.caption("スマホで撮影した名刺を AI で解析し、Notion に登録します。")
 
     settings = load_settings()
