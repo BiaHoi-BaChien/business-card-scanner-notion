@@ -35,16 +35,6 @@
     <h1>Business Card Scanner for Notion</h1>
 </header>
 <main>
-    <section>
-        <h2>使い方</h2>
-        <ul>
-            <li>まず「ログイン」または「パスキーでログイン」を実行し、セッションを確立します。</li>
-            <li>ログイン後、「名刺画像から抽出」で 1〜2 枚の画像をアップロードして連絡先を抽出します。</li>
-            <li>抽出結果を確認し、必要に応じて編集してから「Notion ページ作成」で保存します。</li>
-        </ul>
-        <p class="muted">※ 全てのリクエストは同一オリジンで送信され、セッション Cookie を介して認証されます。</p>
-    </section>
-
     <section id="login-section">
         <h2>ログイン</h2>
         <div class="stack">
