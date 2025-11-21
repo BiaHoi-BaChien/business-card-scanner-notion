@@ -20,18 +20,6 @@ class NotionService
         ]);
     }
 
-    /** @throws GuzzleException */
-    public function verifyConnection(Client $client, string $dataSourceId): bool
-    {
-        try {
-            $resp = $client->get('data_sources/' . $dataSourceId);
-
-            return $resp->getStatusCode() === 200;
-        } catch (GuzzleException) {
-            return false;
-        }
-    }
-
     public function buildPayload(array $contact, array $properties): array
     {
         $company = isset($contact['company']) ? $this->sanitizeCompany($contact['company']) : '';
