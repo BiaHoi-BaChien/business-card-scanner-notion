@@ -230,7 +230,9 @@ def build_notion_properties(
         lambda v: {"select": {"name": v}},
     )
     add_property(
-        property_names["website"], data.get("website"), lambda v: {"url": v}
+        property_names["website"],
+        data.get("website"),
+        lambda v: {"rich_text": [{"text": {"content": v}}]},
     )
     add_property(
         property_names["email"],
