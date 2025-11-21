@@ -408,6 +408,14 @@
     const extractImagesInput = document.getElementById('extract-images');
     const dropZone = document.getElementById('drop-zone');
 
+    function setFileInput(files) {
+        if (!extractImagesInput) return;
+
+        const dataTransfer = new DataTransfer();
+        files.forEach((file) => dataTransfer.items.add(file));
+        extractImagesInput.files = dataTransfer.files;
+    }
+
     function buildExtractionFormData(files) {
         const formData = new FormData();
         Array.from(files).slice(0, 2).forEach((file, idx) => {
@@ -437,6 +445,33 @@
     extractForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await submitExtraction(extractImagesInput.files);
+    });
+
+    dropZone?.addEventListener('click', () => extractImagesInput?.click());
+
+    dropZone?.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone?.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone?.addEventListener('drop', async (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragover');
+
+        const droppedFiles = Array.from(event.dataTransfer?.files || []);
+        const imageFiles = droppedFiles.filter((file) => file.type?.startsWith('image/')).slice(0, 2);
+
+        if (!imageFiles.length) {
+            showResponse({ error: '画像ファイルをドロップしてください。' });
+            return;
+        }
+
+        setFileInput(imageFiles);
+        await submitExtraction(imageFiles);
     });
 
     notionConfirm?.addEventListener('change', updateUi);
