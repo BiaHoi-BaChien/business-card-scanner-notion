@@ -33,7 +33,6 @@
 <body>
 <header>
     <h1>Business Card Scanner for Notion</h1>
-    <p class="muted">Laravel ベースの Web アプリ。ブラウザからログインし、名刺画像のアップロード・Notion 登録までを完結できます。</p>
 </header>
 <main>
     <section>
