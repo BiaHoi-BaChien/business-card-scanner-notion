@@ -11,6 +11,7 @@ class NotionService
     {
         return new Client([
             'base_uri' => 'https://api.notion.com/v1/',
+            'http_errors' => false,
             'headers' => [
                 'Authorization' => 'Bearer ' . $settings['notion_api_key'],
                 'Notion-Version' => $settings['notion_version'],
@@ -22,9 +23,13 @@ class NotionService
     /** @throws GuzzleException */
     public function verifyConnection(Client $client, string $dataSourceId): bool
     {
-        $resp = $client->get('data_sources/' . $dataSourceId);
+        try {
+            $resp = $client->get('data_sources/' . $dataSourceId);
 
-        return $resp->getStatusCode() === 200;
+            return $resp->getStatusCode() === 200;
+        } catch (GuzzleException) {
+            return false;
+        }
     }
 
     public function buildPayload(array $contact, array $properties): array
