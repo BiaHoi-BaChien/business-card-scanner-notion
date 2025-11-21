@@ -13,6 +13,7 @@
    ```bash
    php artisan key:generate
    ```
+   - `There are no commands defined in the "key" namespace.` が表示される場合は、`vendor/` ディレクトリが存在せず Laravel コマンドが読み込まれていません。先に `composer install` を実行し、依存関係をダウンロードしてから再度お試しください。
 4. ローカルサーバーを起動します（`--host` や `--port` で任意指定も可能）。
    ```bash
    php artisan serve
