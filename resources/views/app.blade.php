@@ -51,9 +51,9 @@
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
-                <input id="login-username" type="text" name="username" placeholder="sample_user" required>
+                <input id="login-username" type="text" name="username" placeholder="ユーザー名" required>
                 <label for="login-password">パスワード</label>
-                <input id="login-password" type="password" name="password" placeholder="R7k!pA32#vQm" required>
+                <input id="login-password" type="password" name="password" placeholder="パスワード" required>
                 <button type="submit">ログイン</button>
             </form>
             <form id="passkey-login-form" class="row">
