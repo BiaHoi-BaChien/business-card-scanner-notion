@@ -37,7 +37,6 @@
             <li>まず「ログイン」または「パスキーでログイン」を実行し、セッションを確立します。</li>
             <li>ログイン後、「名刺画像から抽出」で 1〜2 枚の画像をアップロードして連絡先を抽出します。</li>
             <li>抽出結果を確認し、必要に応じて編集してから「Notion ページ作成」で保存します。</li>
-            <li>Notion の接続確認だけをしたい場合は「Notion 接続確認」をクリックしてください。</li>
         </ul>
         <p class="muted">※ 全てのリクエストは同一オリジンで送信され、セッション Cookie を介して認証されます。</p>
     </section>
@@ -87,10 +86,6 @@
 
     <section>
         <h2>Notion 連携</h2>
-        <div class="row">
-            <button id="notion-verify">Notion 接続確認</button>
-            <div style="flex: 1"></div>
-        </div>
         <form id="notion-create-form">
             <label for="contact-json">contact JSON</label>
             <textarea id="contact-json" required>{
@@ -183,15 +178,6 @@
             const json = await res.json();
             if (!res.ok) throw json;
             showResponse(json);
-        } catch (err) {
-            showResponse(err);
-        }
-    });
-
-    document.getElementById('notion-verify').addEventListener('click', async () => {
-        try {
-            const data = await postJson('/api/notion/verify', {});
-            showResponse(data);
         } catch (err) {
             showResponse(err);
         }

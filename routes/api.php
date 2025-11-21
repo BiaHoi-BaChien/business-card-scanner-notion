@@ -12,6 +12,5 @@ Route::post('/passkey/login', [PasskeyController::class, 'login']);
 
 Route::middleware('auth.session')->group(function () {
     Route::post('/extract', [ExtractionController::class, 'extract']);
-    Route::post('/notion/verify', [NotionController::class, 'verify']);
     Route::post('/notion/create', [NotionController::class, 'create']);
 });
