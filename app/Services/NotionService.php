@@ -71,7 +71,9 @@ class NotionService
         ];
     }
 
-    /** @throws GuzzleException */
+    /**
+     * @throws GuzzleException
+     */
     public function createPage(Client $client, array $payload, array $attachments): array
     {
         if (!empty($attachments)) {
@@ -89,7 +91,16 @@ class NotionService
 
         $response = $client->post('pages', ['body' => json_encode($payload)]);
 
-        return json_decode($response->getBody()->getContents(), true);
+        $status = $response->getStatusCode();
+        $body = json_decode($response->getBody()->getContents(), true);
+
+        if ($status < 200 || $status >= 300) {
+            $message = $body['error']['message'] ?? $body['message'] ?? 'Unexpected response from Notion API';
+
+            throw new \RuntimeException("Failed to create Notion page (status {$status}): {$message}");
+        }
+
+        return $body;
     }
 
     private function sanitizeCompany(string $company): string
