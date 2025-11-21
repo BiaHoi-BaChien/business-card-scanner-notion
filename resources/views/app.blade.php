@@ -66,8 +66,9 @@
         textarea { min-height: 140px; font-family: ui-monospace, SFMono-Regular, SFMono, Consolas, "Liberation Mono", Menlo, monospace; }
         .row { display: flex; gap: 12px; }
         .row > div { flex: 1; }
-        button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
+        button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
         button:hover { background: #1d4ed8; }
+        button:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; box-shadow: none; }
         .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
         .button-danger { background: #b91c1c; }
         .button-danger:hover { background: #991b1b; }
@@ -193,8 +194,8 @@
                     <div id="contact-section" class="hidden">
                         <label for="contact-json">contact JSON</label>
                         <textarea id="contact-json" required></textarea>
-                        <label><input type="checkbox" id="notion-confirm"> 解析内容を確認しました</label>
-                        <button id="notion-submit" type="submit">Notion ページ作成</button>
+                        <label><input type="checkbox" id="notion-confirm"> 内容を確認しました</label>
+                        <button id="notion-submit" type="submit">Notionへ登録</button>
                     </div>
                 </form>
             </section>
@@ -306,7 +307,7 @@
         }
 
         if (notionSubmit) {
-            notionSubmit.disabled = !appState.contact || !notionConfirm?.checked;
+            notionSubmit.disabled = !appState.contact;
         }
 
         if (passkeyAccordionTitle) {
@@ -550,8 +551,12 @@
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const hasContact = Boolean(appState.contact);
-        if (!hasContact || !notionConfirm.checked) {
+        if (!hasContact) {
             showResponse({ error: '解析済みデータと確認チェックが必要です。' });
+            return;
+        }
+        if (!notionConfirm.checked) {
+            alert('内容を確認してチェックをいれてください');
             return;
         }
         try {
