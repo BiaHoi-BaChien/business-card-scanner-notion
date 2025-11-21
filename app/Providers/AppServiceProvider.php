@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        File::ensureDirectoryExists(storage_path('logs'));
+
         $version = $this->resolveBuildVersion();
         config(['version.build' => $version]);
 
