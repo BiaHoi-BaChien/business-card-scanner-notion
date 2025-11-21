@@ -84,11 +84,41 @@
         .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
         .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
         .drop-zone.disabled { opacity: 0.6; pointer-events: none; }
-        #loading-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.6); color: #fff; font-size: 24px; font-weight: 800; z-index: 1000; }
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 800;
+            z-index: 1000;
+        }
+        #loading-overlay.hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading-overlay .loading-wave { display: inline-flex; gap: 4px; letter-spacing: 1px; }
+        #loading-overlay .loading-wave span { display: inline-block; animation: loading-wave 1.2s ease-in-out infinite; }
+        #loading-overlay .loading-wave span:nth-child(2) { animation-delay: 0.12s; }
+        #loading-overlay .loading-wave span:nth-child(3) { animation-delay: 0.24s; }
+        #loading-overlay .loading-wave span:nth-child(4) { animation-delay: 0.36s; }
+        @keyframes loading-wave {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body>
-<div id="loading-overlay" class="hidden">解析中</div>
+<div id="loading-overlay" class="hidden" aria-hidden="true">
+    <span class="loading-wave" aria-label="解析中…">
+        <span>解</span><span>析</span><span>中</span><span>…</span>
+    </span>
+</div>
 <header>
     <h1>
         Business Card Scanner for Notion
@@ -222,12 +252,14 @@
     let contactSectionVisible = false;
 
     function setUiDisabled(disabled) {
+        const isDisabled = Boolean(disabled);
         if (loadingOverlay) {
-            loadingOverlay.classList.toggle('hidden', !disabled);
+            loadingOverlay.classList.toggle('hidden', !isDisabled);
+            loadingOverlay.setAttribute('aria-hidden', (!isDisabled).toString());
         }
 
         document.querySelectorAll('button, input, textarea, select').forEach((el) => {
-            if (disabled) {
+            if (isDisabled) {
                 el.dataset.disabledBefore = el.disabled ? 'true' : 'false';
                 el.disabled = true;
             } else if (el.dataset.disabledBefore !== undefined) {
@@ -239,7 +271,7 @@
 
         document.getElementById('drop-zone')?.classList.toggle('disabled', disabled);
 
-        if (!disabled) {
+        if (!isDisabled) {
             updateUi();
         }
     }
