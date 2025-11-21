@@ -1,6 +1,6 @@
 <?php
 
-use CardScanner\{buildNotionPayload, createNotionPage, extractContactData, hashPasskey, jsonResponse, loadEnv, loadPropertyConfig, loadSettings, notionClient, openaiClient, verifyNotionConnection, verifyPasskey, verifyPasswordLogin};
+use function CardScanner\{buildNotionPayload, createNotionPage, extractContactData, hashPasskey, jsonResponse, loadEnv, loadPropertyConfig, loadSettings, notionClient, openaiClient, verifyNotionConnection, verifyPasskey, verifyPasswordLogin};
 use GuzzleHttp\Exception\GuzzleException;
 
 require __DIR__ . '/../vendor/autoload.php';
