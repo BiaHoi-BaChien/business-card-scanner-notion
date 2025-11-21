@@ -1,6 +1,6 @@
-# business-card-scanner-notion
+# business-card-scanner-notion (PHP API)
 
-スマホでの名刺撮影 → AI による情報抽出 → Notion データベースへの連絡先登録ワークフローのサンプル実装
+名刺画像から連絡先を抽出し、Notion に登録するための PHP API 実装です。Python 版は撤去し、PHP 版のみをルートに配置しています。Laravel への移行を前提とした構成にしているため、環境構築時は Composer を利用してください。
 
 ## セットアップ
 
@@ -14,21 +14,23 @@
    AUTH_USERNAME_ENC=Nfk-0FSls44iEbI=
    AUTH_PASSWORD_ENC=FK84gUiB38lyApHY
    ```
-2. 依存関係をインストールします。
+2. 依存関係をインストールします（ネットワークに接続できる環境で実行してください）。
    ```bash
-   pip install -r requirements.txt
+   composer install
    ```
-3. Streamlit アプリを起動します。
+3. PHP のビルトインサーバーで起動します。
    ```bash
-   streamlit run app.py
+   php -S localhost:8000 -t public
    ```
 
-## 使い方
+## エンドポイント
 
-- アプリにログインします（ユーザー名/パスワード または 事前登録したパスキー）。
-- アプリの UI から名刺画像（表・裏の最大 2 枚）をアップロードします。
-- OpenAI API が連絡先を抽出し、Notion API を通じて指定のデータソースに登録します（Notion には写真を保存せず、抽出した文字情報のみ登録します）。
-- 抽出結果と Notion への登録状況が画面に表示されます。
+- `POST /login` … JSON `{ "username": "...", "password": "..." }` でログイン。
+- `POST /passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
+- `POST /passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
+- `POST /extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
+- `POST /notion/verify` … Notion データソースへの疎通確認。
+- `POST /notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
 
 ## 認証の設定
 
@@ -60,7 +62,7 @@ print("AUTH_PASSWORD_ENC=", encrypt_value("your-password", secret))
 
 ### パスキー運用
 
-- ユーザー名/パスワードでログイン後に、画面内の「パスキーを登録/更新する」で任意の文字列を登録できます。
+- ユーザー名/パスワードでログイン後に、`/passkey/register` で任意の文字列を登録できます。
 - 以後は登録済みのパスキーだけでログインすることも可能です。
 
 ## プロパティ名のカスタマイズ
@@ -81,3 +83,8 @@ print("AUTH_PASSWORD_ENC=", encrypt_value("your-password", secret))
 
 - `会社名` は **セレクト** プロパティとして送信され、選択肢に存在しない値は API がデータベースに追加します。
 - `メールアドレス` は **リッチテキスト** プロパティとして送信されます。
+
+## 備考
+
+- PHP コードはルート直下に配置しました。`php` ディレクトリは不要です。
+- Laravel 環境が利用できるネットワークであれば、そのまま依存関係を導入してフレームワーク配下に組み込めます。
