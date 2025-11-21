@@ -51,6 +51,9 @@
         .row > div { flex: 1; }
         button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
         button:hover { background: #1d4ed8; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .button-danger { background: #b91c1c; }
+        .button-danger:hover { background: #991b1b; }
         .muted { color: #475569; font-size: 14px; }
         pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 14px; }
         .danger { color: #b91c1c; }
@@ -100,7 +103,10 @@
     </section>
 
     <section id="post-login-section" class="hidden">
-        <h2>ログイン後の操作</h2>
+        <div class="section-header">
+            <h2>ログイン後の操作</h2>
+            <button id="logout-button" type="button" class="button-danger">ログアウト</button>
+        </div>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
@@ -171,6 +177,7 @@
     const notionSubmit = document.getElementById('notion-submit');
     const notionConfirm = document.getElementById('notion-confirm');
     const contactJsonInput = document.getElementById('contact-json');
+    const logoutButton = document.getElementById('logout-button');
     const passkeyState = document.getElementById('passkey-state');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
@@ -254,7 +261,9 @@
         }
     }
 
-    function resetUi() {
+    function resetUi(options = {}) {
+        const { preserveResponse = false } = options;
+
         appState.authenticated = false;
         appState.contact = null;
         appState.hasPasskey = false;
@@ -277,10 +286,12 @@
             attachmentsInput.value = '';
         }
 
-        if (responseView) {
+        if (responseView && !preserveResponse) {
             responseView.textContent = responseDefault;
         }
-        responseSection?.classList.add('hidden');
+        if (!preserveResponse) {
+            responseSection?.classList.add('hidden');
+        }
 
         if (notionConfirm) {
             notionConfirm.checked = false;
@@ -299,6 +310,17 @@
     passkeyAccordion?.addEventListener('toggle', () => {
         if (!passkeyAccordionSummary) return;
         passkeyAccordionSummary.setAttribute('aria-expanded', passkeyAccordion.open ? 'true' : 'false');
+    });
+
+    logoutButton?.addEventListener('click', async () => {
+        try {
+            const data = await postJson('/api/logout', {});
+            resetUi({ preserveResponse: true });
+            showResponse(data);
+        } catch (err) {
+            resetUi({ preserveResponse: true });
+            showResponse(err);
+        }
     });
 
     async function postJson(url, body) {
