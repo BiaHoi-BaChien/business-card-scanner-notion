@@ -68,6 +68,7 @@
         .row > div { flex: 1; }
         button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
         button:hover { background: #1d4ed8; }
+        #login-form button { margin-top: 8px; }
         #extract-form button { margin-top: 10px; }
         #notion-submit:disabled { background: #cbd5e1; color: #0f172a; cursor: not-allowed; }
         .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
