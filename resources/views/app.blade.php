@@ -175,7 +175,7 @@
 
             <div>
                 <h3>名刺画像から情報抽出</h3>
-                <p id="extraction-status" class="muted">1〜2 枚の名刺画像をアップロードして解析を実行してください。</p>
+                <p id="extraction-status" class="muted">名刺画像をアップロードして解析を実行してください。（最大2枚 表と裏）</p>
                 <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <div id="drop-zone" class="drop-zone">
