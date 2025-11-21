@@ -350,9 +350,6 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
     ]
 
     if st.session_state["authenticated"]:
-        st.success(
-            f"{st.session_state['login_method']} ログイン済みです。アプリを利用できます。"
-        )
         if st.button("ログアウト", use_container_width=True):
             st.session_state["authenticated"] = False
             st.session_state["login_method"] = ""
