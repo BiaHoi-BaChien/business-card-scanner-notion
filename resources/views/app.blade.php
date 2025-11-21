@@ -259,11 +259,13 @@
     }
 
     function resetUi(options = {}) {
-        const { preserveResponse = false } = options;
+        const { preserveResponse = false, preserveAuth = false } = options;
 
-        appState.authenticated = false;
+        if (!preserveAuth) {
+            appState.authenticated = false;
+            appState.hasPasskey = false;
+        }
         appState.contact = null;
-        appState.hasPasskey = false;
 
         document.querySelectorAll('form#extract-form').forEach((form) => form.reset());
         document.getElementById('login-form')?.reset();
@@ -342,7 +344,7 @@
         }
     }
 
-    resetScreenButton?.addEventListener('click', resetUi);
+    resetScreenButton?.addEventListener('click', () => resetUi({ preserveAuth: true }));
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
