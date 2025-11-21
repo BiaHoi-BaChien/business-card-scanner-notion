@@ -1,36 +1,44 @@
-# business-card-scanner-notion (PHP API)
+# business-card-scanner-notion (Laravel Web アプリ)
 
-名刺画像から連絡先を抽出し、Notion に登録するための PHP API 実装です。Python 版は撤去し、PHP 版のみをルートに配置しています。Laravel への移行を前提とした構成にしているため、環境構築時は Composer を利用してください。
+名刺画像から連絡先を抽出し、Notion に登録する Laravel ベースの Web アプリです。ブラウザでアクセスすると、ログイン・パスキー認証・画像アップロード・Notion 登録までを行える UI が表示されます。内部的には Laravel のルーティング/ミドルウェア/サービスコンテナ/セッション管理に従った API を呼び出しています。
 
 ## セットアップ
 
 1. `.env.example` をコピーして `.env` を作成し、必要なキーを設定します。
-   ```env
-   OPENAI_API_KEY=sk-...
-   NOTION_API_KEY=secret_...
-   NOTION_DATA_SOURCE_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   NOTION_VERSION=2025-09-03
-   AUTH_SECRET=demo-shared-secret
-   AUTH_USERNAME_ENC=Nfk-0FSls44iEbI=
-   AUTH_PASSWORD_ENC=FK84gUiB38lyApHY
-   ```
 2. 依存関係をインストールします（ネットワークに接続できる環境で実行してください）。
    ```bash
    composer install
    ```
-3. PHP のビルトインサーバーで起動します。
+3. アプリケーションキーを生成します。
    ```bash
-   php -S localhost:8000 -t public
+   php artisan key:generate
+   ```
+4. ローカルサーバーを起動します。
+   ```bash
+   php artisan serve
    ```
 
-## エンドポイント
+5. ブラウザで `http://localhost:8000/` にアクセスすると、ログインから Notion 登録までを操作できる Web 画面が表示されます。
 
-- `POST /login` … JSON `{ "username": "...", "password": "..." }` でログイン。
-- `POST /passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
-- `POST /passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
-- `POST /extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
-- `POST /notion/verify` … Notion データソースへの疎通確認。
-- `POST /notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
+## 使い方 (Web)
+
+1. ブラウザでトップページを開き、ユーザー名/パスワードでログインするか、既に登録済みのパスキーでログインします。
+2. ログイン後に「名刺画像から抽出」で 1〜2 枚の画像をアップロードし、抽出結果を確認します。
+3. 抽出結果を修正したい場合は JSON を編集し、「Notion ページ作成」を実行します。
+4. Notion の設定確認だけを行いたい場合は「Notion 接続確認」をクリックしてください。
+
+同一ブラウザ内でセッション Cookie を共有しており、すべての操作を UI から完結できます。API を直接呼び出す場合は以下のエンドポイントを利用できます。
+
+## エンドポイント (補足)
+
+- `POST /api/login` … JSON `{ "username": "...", "password": "..." }` でログイン。
+- `POST /api/passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
+- `POST /api/passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
+- `POST /api/extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
+- `POST /api/notion/verify` … Notion データソースへの疎通確認。
+- `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
+
+`/api/extract` 以降のエンドポイントはセッションベースの認証が必要です。`/api/login` または `/api/passkey/login` でセッションを確立してください。
 
 ## 認証の設定
 
@@ -62,7 +70,7 @@ print("AUTH_PASSWORD_ENC=", encrypt_value("your-password", secret))
 
 ### パスキー運用
 
-- ユーザー名/パスワードでログイン後に、`/passkey/register` で任意の文字列を登録できます。
+- ユーザー名/パスワードでログイン後に、`/api/passkey/register` で任意の文字列を登録できます。
 - 以後は登録済みのパスキーだけでログインすることも可能です。
 
 ## プロパティ名のカスタマイズ
@@ -81,10 +89,10 @@ print("AUTH_PASSWORD_ENC=", encrypt_value("your-password", secret))
 }
 ```
 
-- `会社名` は **セレクト** プロパティとして送信され、選択肢に存在しない値は API がデータベースに追加します。
-- `メールアドレス` は **リッチテキスト** プロパティとして送信されます。
+- `会社名` は **リッチテキスト** プロパティとして送信されます。
+- `メールアドレス` は **メール** プロパティとして送信されます。
 
 ## 備考
 
-- PHP コードはルート直下に配置しました。`php` ディレクトリは不要です。
-- Laravel 環境が利用できるネットワークであれば、そのまま依存関係を導入してフレームワーク配下に組み込めます。
+- 旧来のプレーン PHP 実装を Laravel の Web アプリとして組み直しました。トップページの UI から全機能を操作できます。
+- API を直接利用する場合は `http://localhost:8000/api/...` に対してリクエストを送信してください。
