@@ -177,7 +177,6 @@
                 <h3>名刺画像から抽出</h3>
                 <p id="extraction-status" class="muted">1〜2 枚の名刺画像をアップロードして解析を実行してください。</p>
                 <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
-                    <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <div id="drop-zone" class="drop-zone">
                         ここに画像ファイルをドラッグ＆ドロップ
