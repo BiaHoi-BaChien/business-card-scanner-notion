@@ -184,7 +184,7 @@
                         ここに画像ファイルをドラッグ＆ドロップ
                         <small>画像のみ対応・最大 2 枚まで</small>
                     </div>
-                    <button type="submit">API による解析</button>
+                    <button type="submit">名刺写真を解析</button>
                 </form>
             </div>
 
@@ -550,7 +550,6 @@
         }
 
         setFileInput(imageFiles);
-        await submitExtraction(imageFiles);
     });
 
     notionConfirm?.addEventListener('change', updateUi);
