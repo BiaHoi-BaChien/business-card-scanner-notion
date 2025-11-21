@@ -36,8 +36,8 @@ class ContactExtractionService
             . 'Multiple images may contain different business cards—merge every clue across all images into one consolidated contact. '
             . 'If multiple phone numbers are found, keep at most two unique ones. Prefer the most complete/modern-looking email, URL, '
             . 'and company name when variations exist. '
-            . 'Infer the industry from the company name when not explicitly shown. Summarize the industry in Japanese within roughly 100 characters, '
-            . 'avoiding overly terse labels. Use Japanese for all returned values, including the industry. '
+            . 'Infer the industry from the company name when not explicitly shown, and include a brief summary of the core business activities alongside the industry label. '
+            . 'Summarize the industry in Japanese within roughly 100 characters, avoiding overly terse labels. Use Japanese for all returned values, including the industry. '
             . 'When the card shows a name in Japanese, keep it as-is; if both Japanese and English names appear, choose the Japanese name. '
             . 'Do not translate or rewrite names or company names—copy them exactly as printed on the card, including spacing and punctuation.';
 
