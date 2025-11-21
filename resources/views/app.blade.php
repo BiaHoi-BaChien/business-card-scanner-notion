@@ -172,12 +172,6 @@
             </section>
         </div>
 
-        <section id="response-section" class="hidden">
-            <h2>レスポンス</h2>
-            <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-            <pre id="response-view">まだレスポンスはありません。</pre>
-            <button id="reset-screen" type="button">画面のクリア</button>
-        </section>
     </section>
 </main>
 <script>
@@ -197,9 +191,6 @@
     const passkeyRegisteredBadge = document.getElementById('passkey-registered-badge');
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
-    const responseSection = document.getElementById('response-section');
-    const responseView = document.getElementById('response-view');
-    const resetScreenButton = document.getElementById('reset-screen');
     const loadingOverlay = document.getElementById('loading-overlay');
     const sampleContactJson = `{
   "name": "山田 太郎",
@@ -213,7 +204,6 @@
     const contactJsonDefault = sampleContactJson;
     const extractionDefault = extractionStatus?.textContent || '';
     const notionReadyDefault = notionReady?.textContent || '';
-    const responseDefault = responseView?.textContent || '';
     const appState = {
         authenticated: false,
         contact: null,
@@ -254,22 +244,12 @@
     }
 
     function showResponse(data) {
-        if (!responseView || !responseSection) {
-            console.log('Response:', data);
-            return;
-        }
-
-        responseSection.classList.remove('hidden');
-        responseView.textContent = typeof data === 'string'
-            ? data
-            : JSON.stringify(data, null, 2);
+        console.log('Response:', data);
     }
 
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        responseSection.classList.toggle('hidden', !appState.authenticated);
-
         if (appState.contact) {
             revealContactSection();
         }
@@ -318,7 +298,7 @@
     }
 
     function resetUi(options = {}) {
-        const { preserveResponse = false, preserveAuth = false } = options;
+        const { preserveAuth = false } = options;
 
         if (!preserveAuth) {
             appState.authenticated = false;
@@ -343,13 +323,6 @@
             contactJsonInput.value = contactJsonDefault;
         }
 
-        if (responseView && !preserveResponse) {
-            responseView.textContent = responseDefault;
-        }
-        if (!preserveResponse) {
-            responseSection?.classList.add('hidden');
-        }
-
         if (notionConfirm) {
             notionConfirm.checked = false;
         }
@@ -372,10 +345,10 @@
     logoutButton?.addEventListener('click', async () => {
         try {
             const data = await postJson('/api/logout', {});
-            resetUi({ preserveResponse: true });
+            resetUi();
             showResponse(data);
         } catch (err) {
-            resetUi({ preserveResponse: true });
+            resetUi();
             showResponse(err);
         }
     });
@@ -405,8 +378,6 @@
             console.error('Failed to fetch auth status', err);
         }
     }
-
-    resetScreenButton?.addEventListener('click', () => resetUi({ preserveAuth: true }));
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
