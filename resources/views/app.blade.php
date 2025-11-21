@@ -23,6 +23,11 @@
         pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 14px; }
         .danger { color: #b91c1c; }
         ul { padding-left: 20px; margin-top: 4px; }
+        .hidden { display: none; }
+        .status-box { background: #eef2ff; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; margin: 12px 0; }
+        .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #e2e8f0; border-radius: 9999px; font-size: 13px; }
+        .pill small { color: #475569; font-weight: 600; }
+        .stack { display: grid; gap: 12px; }
     </style>
 </head>
 <body>
@@ -34,78 +39,82 @@
     <section>
         <h2>使い方</h2>
         <ul>
-            <li>まず「ログイン」または「パスキーでログイン」を実行し、セッションを確立します。</li>
-            <li>ログイン後、「名刺画像から抽出」で 1〜2 枚の画像をアップロードして連絡先を抽出します。</li>
-            <li>抽出結果を確認し、必要に応じて編集してから「Notion ページ作成」で保存します。</li>
-            <li>Notion の接続確認だけをしたい場合は「Notion 接続確認」をクリックしてください。</li>
+            <li>ログイン画面では「ユーザー名」「パスワード」入力または「パスキーでログイン」を実行します。</li>
+            <li>ログイン後に「パスキー登録 / 更新」→「名刺画像のアップロード & API 解析」を順に進めます。</li>
+            <li>解析が成功すると Notion への登録ボタンが有効化されます。内容を確認して送信してください。</li>
+            <li>Notion の接続確認だけをしたい場合は、ログイン後に「Notion 接続確認」を利用できます。</li>
         </ul>
         <p class="muted">※ 全てのリクエストは同一オリジンで送信され、セッション Cookie を介して認証されます。</p>
     </section>
 
-    <section>
+    <section id="login-section">
         <h2>ログイン</h2>
-        <form id="login-form">
-            <label for="login-username">ユーザー名</label>
-            <input id="login-username" type="text" name="username" placeholder="sample_user" required>
-            <label for="login-password">パスワード</label>
-            <input id="login-password" type="password" name="password" placeholder="R7k!pA32#vQm" required>
-            <button type="submit">ログイン</button>
-        </form>
-    </section>
-
-    <section>
-        <h2>パスキーの登録 / ログイン</h2>
-        <form id="passkey-register-form" class="row">
-            <div>
-                <label for="passkey-register">登録するパスキー</label>
-                <input id="passkey-register" type="text" name="passkey" placeholder="例: my-device-passkey" required>
-            </div>
-            <div style="align-self: end;">
-                <button type="submit">パスキー登録</button>
-            </div>
-        </form>
-        <form id="passkey-login-form" class="row">
-            <div>
-                <label for="passkey-login">ログイン用パスキー</label>
-                <input id="passkey-login" type="text" name="passkey" placeholder="登録済みパスキー" required>
-            </div>
-            <div style="align-self: end;">
-                <button type="submit">パスキーでログイン</button>
-            </div>
-        </form>
-        <p class="muted">ユーザー名/パスワードでログイン後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
-    </section>
-
-    <section>
-        <h2>名刺画像から抽出</h2>
-        <form id="extract-form">
-            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
-            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
-            <button type="submit">抽出を実行</button>
-        </form>
-    </section>
-
-    <section>
-        <h2>Notion 連携</h2>
-        <div class="row">
-            <button id="notion-verify">Notion 接続確認</button>
-            <div style="flex: 1"></div>
+        <div class="status-box" id="auth-notice">セッションを開始するためにログインしてください。</div>
+        <div class="stack">
+            <form id="login-form">
+                <label for="login-username">ユーザー名</label>
+                <input id="login-username" type="text" name="username" placeholder="sample_user" required>
+                <label for="login-password">パスワード</label>
+                <input id="login-password" type="password" name="password" placeholder="R7k!pA32#vQm" required>
+                <button type="submit">ログイン</button>
+            </form>
+            <form id="passkey-login-form" class="row">
+                <div>
+                    <label for="passkey-login">パスキーでログイン</label>
+                    <input id="passkey-login" type="text" name="passkey" placeholder="登録済みパスキー" required>
+                </div>
+                <div style="align-self: end;">
+                    <button type="submit">パスキーでログイン</button>
+                </div>
+            </form>
+            <p class="muted">アカウントに紐づくパスキーを登録済みの場合はこちらからログインできます。</p>
         </div>
-        <form id="notion-create-form">
-            <label for="contact-json">contact JSON</label>
-            <textarea id="contact-json" required>{
-  "name": "山田 太郎",
-  "company": "Example 株式会社",
-  "website": "https://example.com",
-  "email": "taro@example.com",
-  "phone_number_1": "+81-3-1234-5678",
-  "phone_number_2": "",
-  "industry": "IT"
-}</textarea>
-            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-            <button type="submit">Notion ページ作成</button>
-        </form>
+    </section>
+
+    <section id="post-login-section" class="hidden">
+        <h2>ログイン後の操作</h2>
+        <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
+        <div class="stack">
+            <div>
+                <h3>パスキーの登録 / 更新</h3>
+                <form id="passkey-register-form" class="row">
+                    <div>
+                        <label for="passkey-register">登録するパスキー</label>
+                        <input id="passkey-register" type="text" name="passkey" placeholder="例: my-device-passkey" required>
+                    </div>
+                    <div style="align-self: end;">
+                        <button type="submit">パスキー登録</button>
+                    </div>
+                </form>
+                <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
+            </div>
+
+            <div>
+                <h3>名刺画像から抽出</h3>
+                <p id="extraction-status" class="muted">1〜2 枚の名刺画像をアップロードして解析を実行してください。</p>
+                <form id="extract-form">
+                    <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
+                    <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
+                    <button type="submit">API による解析を実行</button>
+                </form>
+            </div>
+
+            <div id="notion-section">
+                <h3>Notion 連携</h3>
+                <div class="row">
+                    <button id="notion-verify" type="button">Notion 接続確認</button>
+                    <div style="flex: 1"></div>
+                </div>
+                <div class="status-box" id="notion-ready">解析が成功すると Notion への登録ボタンが有効になります。</div>
+                <form id="notion-create-form">
+                    <label for="contact-json">contact JSON</label>
+                    <textarea id="contact-json" required placeholder="解析結果がここに表示されます"></textarea>
+                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+                    <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
+                </form>
+            </div>
+        </div>
     </section>
 
     <section>
@@ -116,9 +125,45 @@
 </main>
 <script>
     const responseView = document.getElementById('response-view');
+    const authNotice = document.getElementById('auth-notice');
+    const loginSection = document.getElementById('login-section');
+    const postLoginSection = document.getElementById('post-login-section');
+    const extractionStatus = document.getElementById('extraction-status');
+    const notionReady = document.getElementById('notion-ready');
+    const notionSubmit = document.getElementById('notion-submit');
+    const contactJsonInput = document.getElementById('contact-json');
+    const passkeyState = document.getElementById('passkey-state');
+    const appState = {
+        authenticated: false,
+        contact: null,
+        hasPasskey: false,
+    };
 
     function showResponse(data) {
         responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+
+    function updateUi() {
+        loginSection.classList.toggle('hidden', appState.authenticated);
+        postLoginSection.classList.toggle('hidden', !appState.authenticated);
+        authNotice.textContent = appState.authenticated
+            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
+            : 'セッションを開始するためにログインしてください。';
+
+        extractionStatus.textContent = appState.contact
+            ? '解析結果を確認し、Notion 登録に進めます。'
+            : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
+
+        if (appState.contact) {
+            contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
+            notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
+        } else {
+            contactJsonInput.value = '';
+            notionReady.textContent = '解析が成功すると Notion への登録ボタンが有効になります。';
+        }
+
+        notionSubmit.disabled = !appState.contact;
+        passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
     }
 
     async function postJson(url, body) {
@@ -135,13 +180,28 @@
         return json;
     }
 
+    async function refreshAuthState() {
+        try {
+            const res = await fetch('/api/auth/status', { credentials: 'include' });
+            const json = await res.json();
+            appState.authenticated = Boolean(json.authenticated);
+            appState.hasPasskey = Boolean(json.has_registered_passkey);
+            updateUi();
+        } catch (err) {
+            console.error('Failed to fetch auth status', err);
+        }
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
         try {
             const data = await postJson('/api/login', { username, password });
+            appState.authenticated = true;
+            appState.contact = null;
             showResponse(data);
+            await refreshAuthState();
         } catch (err) {
             showResponse(err);
         }
@@ -153,6 +213,8 @@
         try {
             const data = await postJson('/api/passkey/register', { passkey });
             showResponse(data);
+            appState.hasPasskey = true;
+            updateUi();
         } catch (err) {
             showResponse(err);
         }
@@ -163,7 +225,10 @@
         const passkey = document.getElementById('passkey-login').value;
         try {
             const data = await postJson('/api/passkey/login', { passkey });
+            appState.authenticated = true;
+            appState.contact = null;
             showResponse(data);
+            await refreshAuthState();
         } catch (err) {
             showResponse(err);
         }
@@ -182,7 +247,9 @@
             const res = await fetch('/api/extract', { method: 'POST', body: formData, credentials: 'include' });
             const json = await res.json();
             if (!res.ok) throw json;
+            appState.contact = json.contact || null;
             showResponse(json);
+            updateUi();
         } catch (err) {
             showResponse(err);
         }
@@ -209,6 +276,8 @@
             showResponse(err);
         }
     });
+
+    refreshAuthState();
 </script>
 </body>
 </html>
