@@ -6,7 +6,7 @@
     <title>Business Card Scanner for Notion</title>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f7f7f7; color: #222; }
-        header { background: #1e293b; color: #fff; padding: 16px 24px; }
+        header { background: #1e293b; color: #fff; padding: 24px; }
         main { max-width: 960px; margin: 0 auto; padding: 24px; }
         section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         h1 { margin: 0 0 8px; font-size: 24px; }
@@ -66,17 +66,16 @@
         .drop-zone { margin-top: 12px; padding: 14px; border: 2px dashed #94a3b8; border-radius: 12px; background: #f8fafc; color: #475569; text-align: center; transition: background 0.2s, border-color 0.2s, color 0.2s; }
         .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
         .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
-        .header-meta { display: flex; justify-content: flex-end; }
-        .version-chip { background: #0b1629; border: 1px solid #334155; border-radius: 9999px; padding: 8px 12px; font-weight: 700; color: #e2e8f0; }
     </style>
 </head>
 <body>
 <header>
-    <div class="header-meta">
-        <span class="version-chip" id="build-version" data-build-version="{{ $buildVersion ?? 'dev' }}">
+    <h1>
+        Business Card Scanner for Notion
+        <small class="muted" id="build-version" data-build-version="{{ $buildVersion ?? 'dev' }}">
             v{{ $buildVersion ?? 'dev' }}
-        </span>
-    </div>
+        </small>
+    </h1>
 </header>
 <main>
     <section id="login-section">
