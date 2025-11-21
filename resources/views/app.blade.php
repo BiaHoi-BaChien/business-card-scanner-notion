@@ -75,7 +75,6 @@
     </h1>
 </header>
 <main>
-    <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
     <section id="login-section">
         <h2>ログイン</h2>
         <p class="muted">アカウント情報を入力してセッションを開始してください。</p>
@@ -167,7 +166,6 @@
 <script>
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
-    const authNotice = document.getElementById('auth-notice');
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
@@ -230,12 +228,6 @@
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
         responseSection.classList.toggle('hidden', !appState.authenticated);
-
-        if (authNotice) {
-            authNotice.textContent = appState.authenticated
-                ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
-                : 'セッションを開始するためにログインしてください。';
-        }
 
         if (extractionStatus) {
             extractionStatus.textContent = appState.contact
