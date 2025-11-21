@@ -95,8 +95,8 @@
         .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
         .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
         .drop-zone.disabled { opacity: 0.6; pointer-events: none; }
-        .contact-table-container { margin: 10px 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
-        .contact-table { width: 100%; border-collapse: collapse; }
+        .contact-table-container { margin: 10px 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; overflow-x: auto; }
+        .contact-table { width: 100%; border-collapse: collapse; min-width: 480px; }
         .contact-table th, .contact-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
         .contact-table th { width: 35%; background: #f8fafc; color: #1e293b; font-weight: 700; }
         .contact-table tr:last-child th, .contact-table tr:last-child td { border-bottom: none; }
@@ -146,6 +146,25 @@
         @keyframes loading-wave {
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-8px); }
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 16px; }
+            main { padding: 16px; }
+            section { padding: 16px; }
+            h1 { font-size: 20px; }
+            h2 { font-size: 16px; }
+            .row { flex-direction: column; }
+            .row > div { width: 100%; }
+            .section-header { flex-direction: column; align-items: stretch; }
+            .section-header button { width: 100%; }
+            #extract-form button,
+            #login-form button,
+            #passkey-register-form button,
+            #passkey-login-button,
+            #notion-submit { width: 100%; }
+            input[type="text"], input[type="password"], textarea { font-size: 16px; }
+            .drop-zone { padding: 12px; }
         }
     </style>
 </head>
