@@ -30,20 +30,16 @@ class ContactExtractionService
     /** @throws GuzzleException */
     public function extractContactData(Client $client, array $files): array
     {
-        $systemPrompt = 'You are an assistant that extracts structured contact details from business cards. '
-            . 'Always return a single JSON object with these keys: name, company, website, email, phone_number_1, '
-            . 'phone_number_2, industry. If a value is missing, use an empty string. '
-            . 'Multiple images may contain different business cards—merge every clue across all images into one consolidated contact. '
-            . 'If multiple phone numbers are found, keep at most two unique ones. Prefer the most complete/modern-looking email, URL, '
-            . 'and company name when variations exist. '
-            . 'Investigate the actual business domain and main activities using the printed website or well-established public information—never infer them from the company name alone. '
-            . 'Never invent or guess a business description. If no reliable clue is available, set industry to "不明" and explain that the details could not be determined. '
-            . 'Summarize the industry in Japanese within roughly 100 characters, avoiding overly terse labels. Use Japanese for all returned values, including the industry. '
-            . 'When the card shows a name in Japanese, keep it as-is; if both Japanese and English names appear, choose the Japanese name. '
-            . 'Do not translate or rewrite names or company names—copy them exactly as printed on the card, including spacing and punctuation.';
+        $systemPrompt = 'あなたは名刺から構造化された連絡先情報を抽出するアシスタントです。 '
+            . '常に name, company, website, email, phone_number_1, phone_number_2, industry のキーを持つ単一の JSON オブジェクトだけを返してください。 '
+            . '欠けている値は空文字にします。複数画像に別の名刺が写っていても、すべての手がかりを 1 件のレコードに統合します。 '
+            . '複数の電話番号がある場合は重複を除いた最大 2 件に絞り込み、メール・URL・会社名はより完全で新しいものを優先します。 '
+            . '記載された Web サイトや信頼できる公開情報を基に業種・事業内容を調査し、会社名からだけで推測しないでください。 '
+            . '業種は捏造や憶測を避け、判断材料がなければ "不明" とし、その旨を説明します。おおむね 100 文字で日本語の要約を記載し、値はすべて日本語で返します。 '
+            . '氏名や会社名を翻訳・言い換えせず、印刷どおりの文字間や句読点を含めてそのまま記載してください。';
 
         $userMessage = array_merge([
-            ['type' => 'text', 'text' => 'Extract and merge the contact information from all provided business card images into one consolidated record. Do not create multiple records.'],
+            ['type' => 'text', 'text' => '提供されたすべての名刺画像から連絡先情報を抽出し、1 件のレコードとして統合してください。複数レコードは作成しないでください。'],
         ], $this->buildImageParts($files));
 
         $payload = [
