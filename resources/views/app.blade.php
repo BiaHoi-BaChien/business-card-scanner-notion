@@ -78,7 +78,7 @@
     <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
     <section id="login-section">
         <h2>ログイン</h2>
-        <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
+        <p class="muted">アカウント情報を入力してセッションを開始してください。</p>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -102,7 +102,6 @@
 
     <section id="post-login-section" class="hidden">
         <h2>ログイン後の操作</h2>
-        <p id="auth-notice" class="status-box">セッションを開始するためにログインしてください。</p>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
@@ -135,21 +134,12 @@
                 </div>
             </div>
 
-    <section>
-        <h2>名刺画像から抽出</h2>
-        <form id="extract-form">
-            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
-            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
-            <button type="submit">抽出を実行</button>
-        </form>
-    </section>
-
-    <section>
-        <h2>Notion 連携</h2>
-        <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
-        <form id="notion-create-form">
-            <label for="contact-json">contact JSON</label>
-            <textarea id="contact-json" required>{
+            <section>
+                <h3>Notion 連携</h3>
+                <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
+                <form id="notion-create-form">
+                    <label for="contact-json">contact JSON</label>
+                    <textarea id="contact-json" required>{
   "name": "山田 太郎",
   "company": "Example 株式会社",
   "website": "https://example.com",
@@ -158,17 +148,20 @@
   "phone_number_2": "",
   "industry": "IT"
 }</textarea>
-            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-            <button id="notion-submit" type="submit">Notion ページ作成</button>
-        </form>
-    </section>
+                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+                    <label><input type="checkbox" id="notion-confirm"> 解析内容を確認しました</label>
+                    <button id="notion-submit" type="submit">Notion ページ作成</button>
+                </form>
+            </section>
+        </div>
 
-    <section id="response-section" class="hidden">
-        <h2>レスポンス</h2>
-        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-        <pre id="response-view">まだレスポンスはありません。</pre>
-        <button id="reset-screen" type="button">画面のクリア</button>
+        <section id="response-section" class="hidden">
+            <h2>レスポンス</h2>
+            <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
+            <pre id="response-view">まだレスポンスはありません。</pre>
+            <button id="reset-screen" type="button">画面のクリア</button>
+        </section>
     </section>
 </main>
 <script>
@@ -184,7 +177,8 @@
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const buildVersionEl = document.getElementById('build-version');
-    const authNotice = document.getElementById('auth-notice');
+    const responseSection = document.getElementById('response-section');
+    const responseView = document.getElementById('response-view');
     const resetScreenButton = document.getElementById('reset-screen');
     const contactJsonDefault = contactJsonInput?.value || '';
     const extractionDefault = extractionStatus?.textContent || '';
@@ -221,7 +215,15 @@
     fetchBuildVersion();
 
     function showResponse(data) {
-        console.log('Response:', data);
+        if (!responseView || !responseSection) {
+            console.log('Response:', data);
+            return;
+        }
+
+        responseSection.classList.remove('hidden');
+        responseView.textContent = typeof data === 'string'
+            ? data
+            : JSON.stringify(data, null, 2);
     }
 
     function updateUi() {
@@ -252,7 +254,7 @@
         }
 
         if (notionSubmit) {
-            notionSubmit.disabled = !appState.contact;
+            notionSubmit.disabled = !appState.contact || !notionConfirm?.checked;
         }
 
         if (passkeyState) {
@@ -284,6 +286,10 @@
             responseView.textContent = responseDefault;
         }
         responseSection?.classList.add('hidden');
+
+        if (notionConfirm) {
+            notionConfirm.checked = false;
+        }
 
         if (extractionStatus) {
             extractionStatus.textContent = extractionDefault;
@@ -405,7 +411,7 @@
         await submitExtraction(extractImagesInput.files);
     });
 
-    notionConfirm.addEventListener('change', updateUi);
+    notionConfirm?.addEventListener('change', updateUi);
 
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
