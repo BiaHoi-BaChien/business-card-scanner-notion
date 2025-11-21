@@ -150,7 +150,7 @@
                 <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
                     <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
-                    <button type="submit">API による解析を実行</button>
+                    <button type="submit">API による解析</button>
                 </form>
                 <div id="drop-zone" class="drop-zone">
                     ここに画像ファイルをドラッグ＆ドロップ
