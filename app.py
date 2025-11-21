@@ -353,8 +353,6 @@ def reset_user_flow_state():
 
 def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
     ensure_session_defaults()
-
-    st.subheader("ログイン")
     missing_auth = [
         key
         for key in ("auth_secret", "auth_username_enc", "auth_password_enc")
