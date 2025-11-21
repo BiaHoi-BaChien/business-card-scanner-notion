@@ -24,38 +24,35 @@ class NotionService
     {
         $company = isset($contact['company']) ? $this->sanitizeCompany($contact['company']) : '';
 
+        $propertyValues = [
+            'name' => $contact['name'] ?? '',
+            'company' => $company,
+            'website' => $contact['website'] ?? null,
+            'email' => $contact['email'] ?? null,
+            'phone_number_1' => $contact['phone_number_1'] ?? null,
+            'phone_number_2' => $contact['phone_number_2'] ?? null,
+            'industry' => $contact['industry'] ?? null,
+        ];
+
+        $notionProperties = [];
+
+        foreach ($properties as $key => $config) {
+            if (!isset($config['name'], $config['type'])) {
+                continue;
+            }
+
+            $notionProperties[$config['name']] = $this->buildPropertyValue(
+                $config['type'],
+                $propertyValues[$key] ?? null
+            );
+        }
+
         return [
             'parent' => [
                 'type' => 'data_source_id',
                 'data_source_id' => env('NOTION_DATA_SOURCE_ID'),
             ],
-            'properties' => [
-                $properties['name'] => [
-                    'title' => [[
-                        'text' => ['content' => $contact['name'] ?? ''],
-                    ]],
-                ],
-                $properties['company'] => [
-                    'rich_text' => [[
-                        'text' => ['content' => $company],
-                    ]],
-                ],
-                $properties['website'] => [
-                    'url' => $contact['website'] ?? null,
-                ],
-                $properties['email'] => [
-                    'email' => $contact['email'] ?? null,
-                ],
-                $properties['phone_number_1'] => [
-                    'phone_number' => $contact['phone_number_1'] ?? null,
-                ],
-                $properties['phone_number_2'] => [
-                    'phone_number' => $contact['phone_number_2'] ?? null,
-                ],
-                $properties['industry'] => [
-                    'select' => $contact['industry'] ? ['name' => $contact['industry']] : null,
-                ],
-            ],
+            'properties' => $notionProperties,
         ];
     }
 
@@ -89,6 +86,33 @@ class NotionService
         }
 
         return $body;
+    }
+
+    private function buildPropertyValue(string $type, $value): array
+    {
+        return match ($type) {
+            'title' => [
+                'title' => [[
+                    'text' => ['content' => $value ?? ''],
+                ]],
+            ],
+            'rich_text' => [
+                'rich_text' => [[
+                    'text' => ['content' => $value ?? ''],
+                ]],
+            ],
+            'url' => ['url' => $value ?: null],
+            'email' => ['email' => $value ?: null],
+            'phone_number' => ['phone_number' => $value ?: null],
+            'select' => [
+                'select' => $value ? ['name' => $value] : null,
+            ],
+            default => [
+                'rich_text' => [[
+                    'text' => ['content' => (string) ($value ?? '')],
+                ]],
+            ],
+        };
     }
 
     private function sanitizeCompany(string $company): string

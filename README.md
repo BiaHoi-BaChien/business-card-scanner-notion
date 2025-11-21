@@ -76,22 +76,44 @@ print("AUTH_PASSWORD_ENC=", encrypt_value("your-password", secret))
 
 ## プロパティ名のカスタマイズ
 
-アプリは `property_config.json` に定義されたプロパティ名を使って Notion に登録します。ファイルが無い場合やキーが欠けている場合は以下のデフォルト値を使用します。
+アプリは `property_config.json` に定義されたプロパティ名・型を使って Notion に登録します。ファイルが無い場合やキーが欠けている場合は以下のデフォルト値を使用します。
 
 ```json
 {
-  "name": "名前",
-  "company": "会社名",
-  "website": "会社HP",
-  "email": "メールアドレス",
-  "phone_number_1": "電話番号1",
-  "phone_number_2": "電話番号2",
-  "industry": "業種"
+  "name": {
+    "name": "名前",
+    "type": "title"
+  },
+  "company": {
+    "name": "会社名",
+    "type": "rich_text"
+  },
+  "website": {
+    "name": "会社HP",
+    "type": "url"
+  },
+  "email": {
+    "name": "メールアドレス",
+    "type": "email"
+  },
+  "phone_number_1": {
+    "name": "電話番号1",
+    "type": "phone_number"
+  },
+  "phone_number_2": {
+    "name": "電話番号2",
+    "type": "phone_number"
+  },
+  "industry": {
+    "name": "業種",
+    "type": "select"
+  }
 }
 ```
 
-- `会社名` は **リッチテキスト** プロパティとして送信されます。
-- `メールアドレス` は **メール** プロパティとして送信されます。
+- `type` は `title`, `rich_text`, `url`, `email`, `phone_number`, `select` のいずれかを指定できます。
+- 既存の設定ファイルが文字列のみを持つ場合は、名前だけ上書きして型は上記のデフォルトを使います。
+- Notion 側で `会社名` がセレクト型、`会社HP` がリッチテキストなど、デフォルトと異なる型の場合は `type` を変更して合わせてください。
 
 ## 備考
 
