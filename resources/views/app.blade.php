@@ -75,6 +75,7 @@
     </h1>
 </header>
 <main>
+    <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
     <section id="login-section">
         <h2>ログイン</h2>
         <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
@@ -159,16 +160,16 @@
 }</textarea>
             <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
             <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <label for="notion-confirm" style="display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 500;">
-                    <input id="notion-confirm" type="checkbox" style="width: auto;">
-                    上記内容で登録します。
-                </label>
-                <button id="notion-submit" type="submit">Notionへ登録</button>
-            </div>
+            <button id="notion-submit" type="submit">Notion ページ作成</button>
         </form>
     </section>
 
+    <section id="response-section" class="hidden">
+        <h2>レスポンス</h2>
+        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
+        <pre id="response-view">まだレスポンスはありません。</pre>
+        <button id="reset-screen" type="button">画面のクリア</button>
+    </section>
 </main>
 <script>
     const loginSection = document.getElementById('login-section');
@@ -184,6 +185,11 @@
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const buildVersionEl = document.getElementById('build-version');
     const authNotice = document.getElementById('auth-notice');
+    const resetScreenButton = document.getElementById('reset-screen');
+    const contactJsonDefault = contactJsonInput?.value || '';
+    const extractionDefault = extractionStatus?.textContent || '';
+    const notionReadyDefault = notionReady?.textContent || '';
+    const responseDefault = responseView?.textContent || '';
     const appState = {
         authenticated: false,
         contact: null,
@@ -222,6 +228,7 @@
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
         responseSection.classList.toggle('hidden', !appState.authenticated);
+
         if (authNotice) {
             authNotice.textContent = appState.authenticated
                 ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
@@ -231,7 +238,7 @@
         if (extractionStatus) {
             extractionStatus.textContent = appState.contact
                 ? '解析結果を確認し、Notion 登録に進めます。'
-                : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
+                : extractionDefault;
         }
 
         if (contactJsonInput && notionReady) {
@@ -239,18 +246,53 @@
                 contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
                 notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
             } else {
-                contactJsonInput.value = '';
-                notionReady.textContent = '解析が成功すると Notion への登録ボタンが有効になります。';
+                contactJsonInput.value = contactJsonDefault;
+                notionReady.textContent = notionReadyDefault;
             }
         }
 
-        const hasContact = Boolean(appState.contact);
-        notionConfirm.disabled = !hasContact;
-        if (!hasContact) {
-            notionConfirm.checked = false;
+        if (notionSubmit) {
+            notionSubmit.disabled = !appState.contact;
         }
-        notionSubmit.disabled = !(hasContact && notionConfirm.checked);
-        passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
+
+        if (passkeyState) {
+            passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
+        }
+    }
+
+    function resetUi() {
+        appState.authenticated = false;
+        appState.contact = null;
+        appState.hasPasskey = false;
+
+        document.querySelectorAll('form#extract-form').forEach((form) => form.reset());
+        document.getElementById('login-form')?.reset();
+        document.getElementById('passkey-login-form')?.reset();
+        document.getElementById('passkey-register-form')?.reset();
+        document.getElementById('notion-create-form')?.reset();
+
+        document.querySelectorAll('input[type="file"]').forEach((input) => {
+            input.value = '';
+        });
+
+        if (contactJsonInput) {
+            contactJsonInput.value = contactJsonDefault;
+        }
+        document.getElementById('attachments')?.value = '';
+
+        if (responseView) {
+            responseView.textContent = responseDefault;
+        }
+        responseSection?.classList.add('hidden');
+
+        if (extractionStatus) {
+            extractionStatus.textContent = extractionDefault;
+        }
+        if (notionReady) {
+            notionReady.textContent = notionReadyDefault;
+        }
+
+        updateUi();
     }
 
     passkeyAccordion?.addEventListener('toggle', () => {
@@ -283,6 +325,8 @@
             console.error('Failed to fetch auth status', err);
         }
     }
+
+    resetScreenButton?.addEventListener('click', resetUi);
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
