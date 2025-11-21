@@ -93,6 +93,25 @@
         .contact-table th, .contact-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
         .contact-table th { width: 35%; background: #f8fafc; color: #1e293b; font-weight: 700; }
         .contact-table tr:last-child th, .contact-table tr:last-child td { border-bottom: none; }
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            background: #0ea5e9;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 1200;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
         .contact-empty { margin: 8px 0 12px; }
         #loading-overlay {
             position: fixed;
@@ -129,6 +148,7 @@
         <span>解</span><span>析</span><span>中</span><span>…</span>
     </span>
 </div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <header>
     <h1>
         Business Card Scanner for Notion
@@ -161,6 +181,7 @@
     <section id="post-login-section" class="hidden">
         <div class="section-header">
             <button id="logout-button" type="button" class="button-danger">ログアウト</button>
+            <button id="clear-button" type="button" aria-label="入力内容をクリア">クリア</button>
         </div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
@@ -229,6 +250,7 @@
     const contactTableWrapper = document.getElementById('contact-table-wrapper');
     const contactEmpty = document.getElementById('contact-empty');
     const logoutButton = document.getElementById('logout-button');
+    const clearButton = document.getElementById('clear-button');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const passkeyAccordionTitle = document.getElementById('passkey-accordion-title');
@@ -236,8 +258,10 @@
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const toast = document.getElementById('toast');
     const extractionDefault = extractionStatus?.textContent || '';
     const notionReadyDefault = notionReady?.textContent || '';
+    const notionSubmitDefault = notionSubmit?.textContent || '';
     const appState = {
         authenticated: false,
         contact: null,
@@ -268,6 +292,13 @@
         if (!isDisabled) {
             updateUi();
         }
+    }
+
+    function showToast(message) {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     function revealContactSection() {
@@ -414,6 +445,10 @@
             resetUi();
             showResponse(err);
         }
+    });
+
+    clearButton?.addEventListener('click', () => {
+        resetUi({ preserveAuth: true });
     });
 
     async function postJson(url, body) {
@@ -596,6 +631,9 @@
             alert('内容を確認してチェックをいれてください');
             return;
         }
+        if (!notionSubmit) return;
+        notionSubmit.textContent = '登録中…';
+        notionSubmit.disabled = true;
         try {
             if (!appState.contact) {
                 showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
@@ -603,8 +641,12 @@
             }
             const data = await postJson('/api/notion/create', { contact: appState.contact, attachments: [] });
             showResponse(data);
+            showToast('登録が完了しました');
         } catch (err) {
             showResponse(err);
+        } finally {
+            notionSubmit.textContent = notionSubmitDefault || 'Notionへ登録';
+            notionSubmit.disabled = false;
         }
     });
 
