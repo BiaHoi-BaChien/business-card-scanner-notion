@@ -28,6 +28,9 @@
         .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #e2e8f0; border-radius: 9999px; font-size: 13px; }
         .pill small { color: #475569; font-weight: 600; }
         .stack { display: grid; gap: 12px; }
+        .drop-zone { margin-top: 12px; padding: 14px; border: 2px dashed #94a3b8; border-radius: 12px; background: #f8fafc; color: #475569; text-align: center; transition: background 0.2s, border-color 0.2s, color 0.2s; }
+        .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
+        .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
     </style>
 </head>
 <body>
@@ -89,6 +92,10 @@
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <button type="submit">API による解析を実行</button>
                 </form>
+                <div id="drop-zone" class="drop-zone">
+                    ここに画像ファイルをドラッグ＆ドロップ
+                    <small>画像のみ対応・最大 2 枚まで</small>
+                </div>
             </div>
 
     <section>
@@ -263,17 +270,26 @@
         }
     });
 
-    document.getElementById('extract-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const files = document.getElementById('extract-images').files;
-        if (!files.length) {
+    const extractForm = document.getElementById('extract-form');
+    const extractImagesInput = document.getElementById('extract-images');
+    const dropZone = document.getElementById('drop-zone');
+
+    function buildExtractionFormData(files) {
+        const formData = new FormData();
+        Array.from(files).slice(0, 2).forEach((file, idx) => {
+            formData.append('images[]', file, file.name || `image-${idx + 1}`);
+        });
+        return formData;
+    }
+
+    async function submitExtraction(files) {
+        const selectedFiles = files && files.length ? files : extractImagesInput.files;
+        if (!selectedFiles.length) {
             showResponse({ error: '画像ファイルを選択してください' });
             return;
         }
-        const formData = new FormData();
-        Array.from(files).slice(0, 2).forEach((file, idx) => formData.append('images[]', file, file.name || `image-${idx + 1}`));
         try {
-            const res = await fetch('/api/extract', { method: 'POST', body: formData, credentials: 'include' });
+            const res = await fetch('/api/extract', { method: 'POST', body: buildExtractionFormData(selectedFiles), credentials: 'include' });
             const json = await res.json();
             if (!res.ok) throw json;
             appState.contact = json.contact || null;
@@ -282,7 +298,47 @@
         } catch (err) {
             showResponse(err);
         }
+    }
+
+    extractForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await submitExtraction(extractImagesInput.files);
     });
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        if (dropZone) {
+            dropZone.classList.add('dragover');
+        }
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'copy';
+        }
+    }
+
+    function handleDragLeave() {
+        dropZone?.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        dropZone?.classList.remove('dragover');
+        const droppedFiles = Array.from(e.dataTransfer?.files || []).filter((file) => file.type?.startsWith('image/'));
+        if (!droppedFiles.length) {
+            showResponse({ error: '画像ファイルをドロップしてください（画像のみ対応）' });
+            return;
+        }
+        const dataTransfer = new DataTransfer();
+        droppedFiles.slice(0, 2).forEach((file) => dataTransfer.items.add(file));
+        extractImagesInput.files = dataTransfer.files;
+        submitExtraction(extractImagesInput.files);
+    }
+
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
+    document.addEventListener('dragleave', handleDragLeave);
+    dropZone?.addEventListener('dragover', handleDragOver);
+    dropZone?.addEventListener('drop', handleDrop);
+    dropZone?.addEventListener('dragleave', handleDragLeave);
 
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
