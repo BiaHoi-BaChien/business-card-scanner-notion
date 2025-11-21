@@ -35,4 +35,13 @@ class AuthController extends Controller
             'has_registered_passkey' => (bool) $request->session()->get('registered_passkey_hash'),
         ]);
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->session()->forget('auth');
+        $request->session()->regenerate(true);
+        $request->session()->regenerateToken();
+
+        return response()->json(['ok' => true]);
+    }
 }
