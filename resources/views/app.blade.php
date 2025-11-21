@@ -37,6 +37,7 @@
 <main>
     <section id="login-section">
         <h2>ログイン</h2>
+        <p id="auth-notice" class="muted">セッションを開始するためにログインしてください。</p>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -98,19 +99,8 @@
     <section>
         <h2>Notion 連携</h2>
         <form id="notion-create-form">
-            <label for="contact-json">contact JSON</label>
-            <textarea id="contact-json" required>{
-  "name": "山田 太郎",
-  "company": "Example 株式会社",
-  "website": "https://example.com",
-  "email": "taro@example.com",
-  "phone_number_1": "+81-3-1234-5678",
-  "phone_number_2": "",
-  "industry": "IT"
-}</textarea>
-            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-            <button type="submit">Notion ページ作成</button>
+            <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
+            <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
         </form>
     </section>
 
@@ -124,10 +114,10 @@
     const responseView = document.getElementById('response-view');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
+    const authNotice = document.getElementById('auth-notice');
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
-    const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
     const appState = {
         authenticated: false,
@@ -153,13 +143,9 @@
             ? '解析結果を確認し、Notion 登録に進めます。'
             : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
 
-        if (appState.contact) {
-            contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
-            notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
-        } else {
-            contactJsonInput.value = '';
-            notionReady.textContent = '解析が成功すると Notion への登録ボタンが有効になります。';
-        }
+        notionReady.textContent = appState.contact
+            ? '解析済みデータを Notion に登録できます。内容を確認してください。'
+            : '解析が成功すると Notion への登録ボタンが有効になります。';
 
         notionSubmit.disabled = !appState.contact;
         passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
@@ -257,10 +243,11 @@
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-            const contact = JSON.parse(document.getElementById('contact-json').value || '{}');
-            const attachmentsRaw = document.getElementById('attachments').value.trim();
-            const attachments = attachmentsRaw ? attachmentsRaw.split(/\n+/).filter(Boolean) : [];
-            const data = await postJson('/api/notion/create', { contact, attachments });
+            if (!appState.contact) {
+                showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
+                return;
+            }
+            const data = await postJson('/api/notion/create', { contact: appState.contact, attachments: [] });
             showResponse(data);
         } catch (err) {
             showResponse(err);
