@@ -142,6 +142,7 @@
 
     function showResponse(data) {
         responseView.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        responseSection.classList.remove('hidden');
     }
 
     function updateUi() {
