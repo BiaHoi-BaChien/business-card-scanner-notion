@@ -110,12 +110,12 @@
                 </form>
             </div>
         </div>
+    </section>
 
-        <section id="response-section" class="hidden">
-            <h2>レスポンス</h2>
-            <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
-            <pre id="response-view">まだレスポンスはありません。</pre>
-        </section>
+    <section id="response-section" class="hidden">
+        <h2>レスポンス</h2>
+        <p class="muted">各操作のレスポンスやエラーをここに表示します。</p>
+        <pre id="response-view">まだレスポンスはありません。</pre>
     </section>
 </main>
 <script>
@@ -167,7 +167,6 @@
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        responseSection.classList.toggle('hidden', !appState.authenticated);
         authNotice.textContent = appState.authenticated
             ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
             : 'セッションを開始するためにログインしてください。';
