@@ -240,9 +240,7 @@ function buildNotionPayload(array $contact, array $properties): array
                 ]],
             ],
             $properties['company'] => [
-                'rich_text' => [[
-                    'text' => ['content' => $company],
-                ]],
+                'select' => $company !== '' ? ['name' => $company] : null,
             ],
             $properties['website'] => [
                 'url' => $contact['website'] ?? null,
