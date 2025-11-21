@@ -27,4 +27,12 @@ class AuthController extends Controller
 
         return response()->json(['ok' => false, 'error' => 'Invalid credentials'], 401);
     }
+
+    public function status(Request $request): JsonResponse
+    {
+        return response()->json([
+            'authenticated' => (bool) $request->session()->get('auth', false),
+            'has_registered_passkey' => (bool) $request->session()->get('registered_passkey_hash'),
+        ]);
+    }
 }
