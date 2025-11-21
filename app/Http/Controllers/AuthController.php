@@ -22,10 +22,21 @@ class AuthController extends Controller
         $ok = $this->authService->verifyPasswordLogin($body['username'], $body['password'], $this->settings());
         if ($ok) {
             $request->session()->put('auth', true);
-            return response()->json(['ok' => true]);
+
+            if ($request->expectsJson() || $request->isJson()) {
+                return response()->json(['ok' => true]);
+            }
+
+            return redirect('/');
         }
 
-        return response()->json(['ok' => false, 'error' => 'Invalid credentials'], 401);
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json(['ok' => false, 'error' => 'Invalid credentials'], 401);
+        }
+
+        return redirect('/')
+            ->withInput($request->only(['username']))
+            ->with('error', 'ユーザー名またはパスワードが正しくありません。');
     }
 
     public function status(Request $request): JsonResponse
