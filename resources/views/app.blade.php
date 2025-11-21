@@ -128,7 +128,7 @@
                 <summary aria-controls="passkey-accordion-body" aria-expanded="false">
                     <span class="accordion-title">
                         <span id="passkey-accordion-title">パスキーの登録</span>
-                        <span id="passkey-registered-badge" class="badge hidden">Passkey 登録済み</span>
+                        <span id="passkey-registered-badge" class="badge hidden">パスキー登録済</span>
                     </span>
                 </summary>
                 <div class="accordion-body" id="passkey-accordion-body">
