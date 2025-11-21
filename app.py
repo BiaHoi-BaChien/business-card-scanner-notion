@@ -373,7 +373,7 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
             "AUTH_PASSWORD_ENC を環境変数に設定してください。"
         )
 
-    cols = st.columns(2)
+    cols = st.columns(2, gap="large")
     with cols[0]:
         with st.form("password_login"):
             username_input = st.text_input("ユーザー名", value="")
@@ -447,6 +447,28 @@ def enable_global_dropzone(uploader_label: str):
     st.markdown(
         f"""
         <style>
+        /* Keep the main layout compact and centered on larger screens */
+        .main .block-container {{
+            max-width: 960px;
+            padding-top: 1.5rem;
+            padding-bottom: 3rem;
+            margin: 0 auto;
+        }}
+
+        /* Make uploader and buttons stretch to the available width */
+        .stFileUploader > div:first-child {{
+            width: 100%;
+        }}
+
+        .stFileUploader [data-testid="fileUploader"] label {{
+            width: 100%;
+        }}
+
+        .stButton button {{
+            width: 100%;
+        }}
+
+        /* Give drop overlay a softer appearance */
         #global-drop-overlay {{
             position: fixed;
             inset: 0;
@@ -531,7 +553,7 @@ def render_app_body(
         st.error("アップロードできるのは最大2枚までです。")
         uploaded_files = uploaded_files[:2]
 
-    action_cols = st.columns(2)
+    action_cols = st.columns(2, gap="medium")
     with action_cols[0]:
         analyze_clicked = st.button("AIで解析", use_container_width=True)
     with action_cols[1]:
