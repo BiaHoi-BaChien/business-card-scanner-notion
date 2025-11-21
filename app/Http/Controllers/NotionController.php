@@ -7,6 +7,7 @@ use App\Services\PropertyConfigService;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class NotionController extends Controller
 {
@@ -30,7 +31,11 @@ class NotionController extends Controller
         $properties = $this->propertyConfigService->load(base_path());
         $payload = $this->notionService->buildPayload($contact, $properties);
         $client = $this->notionService->createClient($this->settings());
-        $page = $this->notionService->createPage($client, $payload, $attachments);
+        try {
+            $page = $this->notionService->createPage($client, $payload, $attachments);
+        } catch (RuntimeException $exception) {
+            return response()->json(['error' => $exception->getMessage()], 502);
+        }
 
         return response()->json(['page' => $page]);
     }
