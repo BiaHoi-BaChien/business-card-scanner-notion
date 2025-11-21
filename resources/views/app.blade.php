@@ -100,6 +100,8 @@
     </section>
 
     <section id="post-login-section" class="hidden">
+        <h2>ログイン後の操作</h2>
+        <p id="auth-notice" class="status-box">セッションを開始するためにログインしてください。</p>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
@@ -134,6 +136,7 @@
 
             <div>
                 <h3>Notion 連携</h3>
+                <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
                 <form id="notion-create-form">
                     <label for="contact-json">contact JSON</label>
                     <textarea id="contact-json" required>{
@@ -147,7 +150,7 @@
 }</textarea>
                     <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
                     <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-                    <button type="submit">Notion ページ作成</button>
+                    <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
                 </form>
             </div>
         </div>
@@ -165,6 +168,7 @@
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const buildVersionEl = document.getElementById('build-version');
+    const authNotice = document.getElementById('auth-notice');
     const appState = {
         authenticated: false,
         contact: null,
@@ -202,19 +206,32 @@
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        authNotice.textContent = appState.authenticated
-            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
-            : 'セッションを開始するためにログインしてください。';
+        responseSection.classList.toggle('hidden', !appState.authenticated);
+        if (authNotice) {
+            authNotice.textContent = appState.authenticated
+                ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
+                : 'セッションを開始するためにログインしてください。';
+        }
 
-        extractionStatus.textContent = appState.contact
-            ? '解析結果を確認し、Notion 登録に進めます。'
-            : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
+        if (extractionStatus) {
+            extractionStatus.textContent = appState.contact
+                ? '解析結果を確認し、Notion 登録に進めます。'
+                : '1〜2 枚の名刺画像をアップロードして解析を実行してください。';
+        }
 
-        notionReady.textContent = appState.contact
-            ? '解析済みデータを Notion に登録できます。内容を確認してください。'
-            : '解析が成功すると Notion への登録ボタンが有効になります。';
+        if (contactJsonInput && notionReady) {
+            if (appState.contact) {
+                contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
+                notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
+            } else {
+                contactJsonInput.value = '';
+                notionReady.textContent = '解析が成功すると Notion への登録ボタンが有効になります。';
+            }
+        }
 
-        notionSubmit.disabled = !appState.contact;
+        if (notionSubmit) {
+            notionSubmit.disabled = !appState.contact;
+        }
         passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
     }
 
