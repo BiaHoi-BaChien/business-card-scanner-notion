@@ -180,12 +180,12 @@
                 <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
                     <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
+                    <div id="drop-zone" class="drop-zone">
+                        ここに画像ファイルをドラッグ＆ドロップ
+                        <small>画像のみ対応・最大 2 枚まで</small>
+                    </div>
                     <button type="submit">API による解析</button>
                 </form>
-                <div id="drop-zone" class="drop-zone">
-                    ここに画像ファイルをドラッグ＆ドロップ
-                    <small>画像のみ対応・最大 2 枚まで</small>
-                </div>
             </div>
 
             <section>
