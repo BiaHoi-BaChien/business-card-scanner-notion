@@ -104,7 +104,6 @@
 
     <section id="post-login-section" class="hidden">
         <div class="section-header">
-            <h2>ログイン後の操作</h2>
             <button id="logout-button" type="button" class="button-danger">ログアウト</button>
         </div>
         <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
