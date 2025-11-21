@@ -503,7 +503,10 @@
     async function postJson(url, body) {
         const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
             credentials: 'include',
             body: JSON.stringify(body)
         });
