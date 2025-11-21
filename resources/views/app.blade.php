@@ -134,12 +134,21 @@
                 </div>
             </div>
 
-            <div>
-                <h3>Notion 連携</h3>
-                <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
-                <form id="notion-create-form">
-                    <label for="contact-json">contact JSON</label>
-                    <textarea id="contact-json" required>{
+    <section>
+        <h2>名刺画像から抽出</h2>
+        <form id="extract-form">
+            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
+            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
+            <button type="submit">抽出を実行</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Notion 連携</h2>
+        <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
+        <form id="notion-create-form">
+            <label for="contact-json">contact JSON</label>
+            <textarea id="contact-json" required>{
   "name": "山田 太郎",
   "company": "Example 株式会社",
   "website": "https://example.com",
@@ -148,12 +157,16 @@
   "phone_number_2": "",
   "industry": "IT"
 }</textarea>
-                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-                    <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
-                </form>
+            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <label for="notion-confirm" style="display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 500;">
+                    <input id="notion-confirm" type="checkbox" style="width: auto;">
+                    上記内容で登録します。
+                </label>
+                <button id="notion-submit" type="submit">Notionへ登録</button>
             </div>
-        </div>
+        </form>
     </section>
 
 </main>
@@ -164,6 +177,8 @@
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
+    const notionConfirm = document.getElementById('notion-confirm');
+    const contactJsonInput = document.getElementById('contact-json');
     const passkeyState = document.getElementById('passkey-state');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
@@ -229,9 +244,12 @@
             }
         }
 
-        if (notionSubmit) {
-            notionSubmit.disabled = !appState.contact;
+        const hasContact = Boolean(appState.contact);
+        notionConfirm.disabled = !hasContact;
+        if (!hasContact) {
+            notionConfirm.checked = false;
         }
+        notionSubmit.disabled = !(hasContact && notionConfirm.checked);
         passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
     }
 
@@ -343,48 +361,15 @@
         await submitExtraction(extractImagesInput.files);
     });
 
-    function handleDragOver(e) {
-        e.preventDefault();
-        if (dropZone) {
-            dropZone.classList.add('dragover');
-        }
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'copy';
-        }
-    }
-
-    function handleDragLeave() {
-        dropZone?.classList.remove('dragover');
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        dropZone?.classList.remove('dragover');
-        const droppedFiles = Array.from(e.dataTransfer?.files || []).filter((file) => file.type?.startsWith('image/'));
-        if (!droppedFiles.length) {
-            showResponse({ error: '画像ファイルをドロップしてください（画像のみ対応）' });
-            return;
-        }
-        const dataTransfer = new DataTransfer();
-        droppedFiles.slice(0, 2).forEach((file) => dataTransfer.items.add(file));
-        extractImagesInput.files = dataTransfer.files;
-        submitExtraction(extractImagesInput.files);
-    }
-
-    function handleDocumentDrop(e) {
-        e.preventDefault();
-        dropZone?.classList.remove('dragover');
-    }
-
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDocumentDrop);
-    document.addEventListener('dragleave', handleDragLeave);
-    dropZone?.addEventListener('dragover', handleDragOver);
-    dropZone?.addEventListener('drop', handleDrop);
-    dropZone?.addEventListener('dragleave', handleDragLeave);
+    notionConfirm.addEventListener('change', updateUi);
 
     document.getElementById('notion-create-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const hasContact = Boolean(appState.contact);
+        if (!hasContact || !notionConfirm.checked) {
+            showResponse({ error: '解析済みデータと確認チェックが必要です。' });
+            return;
+        }
         try {
             if (!appState.contact) {
                 showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
