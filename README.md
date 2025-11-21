@@ -27,7 +27,6 @@
 1. ブラウザでトップページを開き、ユーザー名/パスワードでログインするか、既に登録済みのパスキーでログインします。
 2. ログイン後に「名刺画像から抽出」で 1〜2 枚の画像をアップロードし、抽出結果を確認します。
 3. 抽出結果を修正したい場合は JSON を編集し、「Notion ページ作成」を実行します。
-4. Notion の設定確認だけを行いたい場合は「Notion 接続確認」をクリックしてください。
 
 同一ブラウザ内でセッション Cookie を共有しており、すべての操作を UI から完結できます。API を直接呼び出す場合は以下のエンドポイントを利用できます。
 
@@ -37,7 +36,6 @@
 - `POST /api/passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
 - `POST /api/passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
 - `POST /api/extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
-- `POST /api/notion/verify` … Notion データソースへの疎通確認。
 - `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
 
 `/api/extract` 以降のエンドポイントはセッションベースの認証が必要です。`/api/login` または `/api/passkey/login` でセッションを確立してください。

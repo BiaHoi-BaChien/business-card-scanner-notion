@@ -39,17 +39,15 @@
     <section>
         <h2>使い方</h2>
         <ul>
-            <li>ログイン画面では「ユーザー名」「パスワード」入力または「パスキーでログイン」を実行します。</li>
-            <li>ログイン後に「パスキー登録 / 更新」→「名刺画像のアップロード & API 解析」を順に進めます。</li>
-            <li>解析が成功すると Notion への登録ボタンが有効化されます。内容を確認して送信してください。</li>
-            <li>Notion の接続確認だけをしたい場合は、ログイン後に「Notion 接続確認」を利用できます。</li>
+            <li>まず「ログイン」または「パスキーでログイン」を実行し、セッションを確立します。</li>
+            <li>ログイン後、「名刺画像から抽出」で 1〜2 枚の画像をアップロードして連絡先を抽出します。</li>
+            <li>抽出結果を確認し、必要に応じて編集してから「Notion ページ作成」で保存します。</li>
         </ul>
         <p class="muted">※ 全てのリクエストは同一オリジンで送信され、セッション Cookie を介して認証されます。</p>
     </section>
 
     <section id="login-section">
         <h2>ログイン</h2>
-        <div class="status-box" id="auth-notice">セッションを開始するためにログインしてください。</div>
         <div class="stack">
             <form id="login-form">
                 <label for="login-username">ユーザー名</label>
@@ -99,22 +97,32 @@
                 </form>
             </div>
 
-            <div id="notion-section">
-                <h3>Notion 連携</h3>
-                <div class="row">
-                    <button id="notion-verify" type="button">Notion 接続確認</button>
-                    <div style="flex: 1"></div>
-                </div>
-                <div class="status-box" id="notion-ready">解析が成功すると Notion への登録ボタンが有効になります。</div>
-                <form id="notion-create-form">
-                    <label for="contact-json">contact JSON</label>
-                    <textarea id="contact-json" required placeholder="解析結果がここに表示されます"></textarea>
-                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
-                    <button id="notion-submit" type="submit" disabled>Notion ページ作成</button>
-                </form>
-            </div>
-        </div>
+    <section>
+        <h2>名刺画像から抽出</h2>
+        <form id="extract-form">
+            <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
+            <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
+            <button type="submit">抽出を実行</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Notion 連携</h2>
+        <form id="notion-create-form">
+            <label for="contact-json">contact JSON</label>
+            <textarea id="contact-json" required>{
+  "name": "山田 太郎",
+  "company": "Example 株式会社",
+  "website": "https://example.com",
+  "email": "taro@example.com",
+  "phone_number_1": "+81-3-1234-5678",
+  "phone_number_2": "",
+  "industry": "IT"
+}</textarea>
+            <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
+            <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
+            <button type="submit">Notion ページ作成</button>
+        </form>
     </section>
 
     <section id="response-section" class="hidden">
@@ -125,7 +133,6 @@
 </main>
 <script>
     const responseView = document.getElementById('response-view');
-    const authNotice = document.getElementById('auth-notice');
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
     const extractionStatus = document.getElementById('extraction-status');
@@ -253,15 +260,6 @@
             appState.contact = json.contact || null;
             showResponse(json);
             updateUi();
-        } catch (err) {
-            showResponse(err);
-        }
-    });
-
-    document.getElementById('notion-verify').addEventListener('click', async () => {
-        try {
-            const data = await postJson('/api/notion/verify', {});
-            showResponse(data);
         } catch (err) {
             showResponse(err);
         }

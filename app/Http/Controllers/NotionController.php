@@ -17,15 +17,6 @@ class NotionController extends Controller
     }
 
     /** @throws GuzzleException */
-    public function verify(): JsonResponse
-    {
-        $client = $this->notionService->createClient($this->settings());
-        $ok = $this->notionService->verifyConnection($client, $this->settings()['notion_data_source_id'] ?? '');
-
-        return response()->json(['ok' => $ok]);
-    }
-
-    /** @throws GuzzleException */
     public function create(Request $request): JsonResponse
     {
         $body = $request->validate([
