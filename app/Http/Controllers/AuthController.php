@@ -6,6 +6,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -20,8 +21,8 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $ok = $this->authService->verifyPasswordLogin($body['username'], $body['password'], $this->settings());
-        if ($ok) {
+        $result = $this->authService->verifyPasswordLogin($body['username'], $body['password'], $this->settings());
+        if ($result['ok']) {
             $request->session()->put('auth', true);
 
             if ($request->expectsJson() || $request->isJson()) {
@@ -30,6 +31,11 @@ class AuthController extends Controller
 
             return redirect('/');
         }
+
+        Log::warning('Login failed', [
+            'username' => $body['username'],
+            'reason' => $result['error'] ?? 'Unknown error',
+        ]);
 
         if ($request->expectsJson() || $request->isJson()) {
             return response()->json(['ok' => false, 'error' => 'Invalid credentials'], 401);
