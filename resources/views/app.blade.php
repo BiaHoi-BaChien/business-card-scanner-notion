@@ -152,7 +152,6 @@
         <div class="section-header">
             <button id="logout-button" type="button" class="button-danger">ログアウト</button>
         </div>
-        <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
             <details class="accordion" id="passkey-accordion">
                 <summary aria-controls="passkey-accordion-body" aria-expanded="false">
@@ -214,7 +213,6 @@
     const contactJsonInput = document.getElementById('contact-json');
     const contactSection = document.getElementById('contact-section');
     const logoutButton = document.getElementById('logout-button');
-    const passkeyState = document.getElementById('passkey-state');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
     const passkeyAccordionTitle = document.getElementById('passkey-accordion-title');
@@ -310,10 +308,6 @@
 
         if (notionSubmit) {
             notionSubmit.disabled = !appState.contact || !notionConfirm?.checked;
-        }
-
-        if (passkeyState) {
-            passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
         }
 
         if (passkeyAccordionTitle) {
