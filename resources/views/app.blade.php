@@ -191,8 +191,7 @@
                 <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
                 <form id="notion-create-form" method="post" action="/api/notion/create">
                     <div id="contact-section" class="hidden">
-                        <label for="contact-json">contact JSON</label>
-                        <textarea id="contact-json" required></textarea>
+                        <textarea id="contact-json" aria-label="連携データ" required></textarea>
                         <label><input type="checkbox" id="notion-confirm"> 解析内容を確認しました</label>
                         <button id="notion-submit" type="submit">Notion ページ作成</button>
                     </div>
