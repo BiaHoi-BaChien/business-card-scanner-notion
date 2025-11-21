@@ -87,6 +87,12 @@
         .drop-zone.dragover { background: #e0f2fe; border-color: #0ea5e9; color: #0f172a; }
         .drop-zone small { display: block; margin-top: 6px; color: #64748b; }
         .drop-zone.disabled { opacity: 0.6; pointer-events: none; }
+        .contact-table-container { margin: 10px 0 14px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
+        .contact-table { width: 100%; border-collapse: collapse; }
+        .contact-table th, .contact-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        .contact-table th { width: 35%; background: #f8fafc; color: #1e293b; font-weight: 700; }
+        .contact-table tr:last-child th, .contact-table tr:last-child td { border-bottom: none; }
+        .contact-empty { margin: 8px 0 12px; }
         #loading-overlay {
             position: fixed;
             inset: 0;
@@ -194,8 +200,12 @@
                 <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
                 <form id="notion-create-form" method="post" action="/api/notion/create">
                     <div id="contact-section" class="hidden">
-                        <label for="contact-json">contact JSON</label>
-                        <textarea id="contact-json" required></textarea>
+                        <div id="contact-table-wrapper" class="contact-table-container hidden">
+                            <table class="contact-table">
+                                <tbody id="contact-table-body"></tbody>
+                            </table>
+                        </div>
+                        <p id="contact-empty" class="muted contact-empty">解析結果がここに表示されます。</p>
                         <label><input type="checkbox" id="notion-confirm"> 内容を確認しました</label>
                         <button id="notion-submit" type="submit">Notionへ登録</button>
                     </div>
@@ -206,14 +216,17 @@
     </section>
 </main>
 <script>
+    const propertyConfig = @json($propertyConfig ?? []);
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
     const extractionStatus = document.getElementById('extraction-status');
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
     const notionConfirm = document.getElementById('notion-confirm');
-    const contactJsonInput = document.getElementById('contact-json');
     const contactSection = document.getElementById('contact-section');
+    const contactTableBody = document.getElementById('contact-table-body');
+    const contactTableWrapper = document.getElementById('contact-table-wrapper');
+    const contactEmpty = document.getElementById('contact-empty');
     const logoutButton = document.getElementById('logout-button');
     const passkeyAccordion = document.getElementById('passkey-accordion');
     const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
@@ -222,16 +235,6 @@
     const passkeyRegisterNote = document.getElementById('passkey-register-note');
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
     const loadingOverlay = document.getElementById('loading-overlay');
-    const sampleContactJson = `{
-  "name": "山田 太郎",
-  "company": "Example 株式会社",
-  "website": "https://example.com",
-  "email": "taro@example.com",
-  "phone_number_1": "+81-3-1234-5678",
-  "phone_number_2": "",
-  "industry": "IT"
-}`;
-    const contactJsonDefault = sampleContactJson;
     const extractionDefault = extractionStatus?.textContent || '';
     const notionReadyDefault = notionReady?.textContent || '';
     const appState = {
@@ -270,13 +273,41 @@
         if (!contactSection) return;
         contactSectionVisible = true;
         contactSection.classList.remove('hidden');
-        if (contactJsonInput && !contactJsonInput.value) {
-            contactJsonInput.value = contactJsonDefault;
-        }
     }
 
     function showResponse(data) {
         console.log('Response:', data);
+    }
+
+    function renderContactTable(contact) {
+        if (!contactTableBody) return;
+
+        const entries = [];
+        const propertyKeys = Object.keys(propertyConfig || {});
+
+        propertyKeys.forEach((key) => {
+            const label = propertyConfig?.[key]?.name || key;
+            entries.push({ key, label, value: contact?.[key] ?? '' });
+        });
+
+        if (contact) {
+            Object.keys(contact)
+                .filter((key) => !propertyKeys.includes(key))
+                .forEach((key) => entries.push({ key, label: key, value: contact[key] ?? '' }));
+        }
+
+        contactTableBody.innerHTML = '';
+
+        entries.forEach(({ label, value }) => {
+            const row = document.createElement('tr');
+            const th = document.createElement('th');
+            const td = document.createElement('td');
+            th.textContent = label;
+            td.textContent = value || '－';
+            row.appendChild(th);
+            row.appendChild(td);
+            contactTableBody.appendChild(row);
+        });
     }
 
     function updateUi() {
@@ -293,21 +324,30 @@
             extractionStatus.textContent = extractionDefault;
         }
 
-        if (contactJsonInput && notionReady) {
+        if (notionReady) {
             if (appState.contact) {
-                contactJsonInput.value = JSON.stringify(appState.contact, null, 2);
                 notionReady.textContent = '解析済みデータを Notion に登録できます。内容を確認してください。';
-            } else if (contactSectionVisible) {
-                contactJsonInput.value = contactJsonDefault;
-                notionReady.textContent = notionReadyDefault;
             } else {
-                contactJsonInput.value = '';
                 notionReady.textContent = notionReadyDefault;
             }
         }
 
+        if (contactTableWrapper && contactEmpty) {
+            const hasContact = Boolean(appState.contact);
+            contactTableWrapper.classList.toggle('hidden', !hasContact);
+            contactEmpty.classList.toggle('hidden', hasContact);
+
+            if (hasContact) {
+                renderContactTable(appState.contact);
+            } else if (contactTableBody) {
+                contactTableBody.innerHTML = '';
+            }
+        }
+
         if (notionSubmit) {
-            notionSubmit.disabled = !appState.contact;
+            const hasContact = Boolean(appState.contact);
+            const hasConfirmation = Boolean(notionConfirm?.checked);
+            notionSubmit.disabled = !hasContact || !hasConfirmation;
         }
 
         if (passkeyAccordionTitle) {
@@ -344,10 +384,6 @@
         document.querySelectorAll('input[type="file"]').forEach((input) => {
             input.value = '';
         });
-
-        if (contactJsonInput) {
-            contactJsonInput.value = contactJsonDefault;
-        }
 
         if (notionConfirm) {
             notionConfirm.checked = false;
