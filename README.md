@@ -13,9 +13,10 @@
    ```bash
    php artisan key:generate
    ```
-4. ローカルサーバーを起動します。
+4. ローカルサーバーを起動します（`--host` や `--port` で任意指定も可能）。
    ```bash
    php artisan serve
+   # 例: php artisan serve --host=0.0.0.0 --port=8080
    ```
 
 5. ブラウザで `http://localhost:8000/` にアクセスすると、ログインから Notion 登録までを操作できる Web 画面が表示されます。
