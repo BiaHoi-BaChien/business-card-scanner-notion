@@ -17,7 +17,7 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
-    'key' => env('APP_KEY'),
+    'key' => env('APP_KEY', 'base64:31sPXDvKrGPDp2PgACy6HZ8qCQnJN4h5KdAesoV+Lso='),
 
     'cipher' => 'AES-256-CBC',
 
