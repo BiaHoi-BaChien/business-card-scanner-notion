@@ -153,8 +153,6 @@
   "phone_number_2": "",
   "industry": "IT"
 }</textarea>
-                    <label for="attachments">添付ファイル (data URL) を 1 行ずつ</label>
-                    <textarea id="attachments" placeholder="data:image/png;base64,..."></textarea>
                     <label><input type="checkbox" id="notion-confirm"> 解析内容を確認しました</label>
                     <button id="notion-submit" type="submit">Notion ページ作成</button>
                 </form>
@@ -280,10 +278,6 @@
 
         if (contactJsonInput) {
             contactJsonInput.value = contactJsonDefault;
-        }
-        const attachmentsInput = document.getElementById('attachments');
-        if (attachmentsInput) {
-            attachmentsInput.value = '';
         }
 
         if (responseView && !preserveResponse) {
