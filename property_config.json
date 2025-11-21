@@ -1,9 +1,30 @@
 {
-  "name": "名前",
-  "company": "会社名",
-  "website": "会社HP",
-  "email": "メールアドレス",
-  "phone_number_1": "電話番号1",
-  "phone_number_2": "電話番号2",
-  "industry": "業種"
+  "name": {
+    "name": "名前",
+    "type": "title"
+  },
+  "company": {
+    "name": "会社名",
+    "type": "select"
+  },
+  "website": {
+    "name": "会社HP",
+    "type": "rich_text"
+  },
+  "email": {
+    "name": "メールアドレス",
+    "type": "rich_text"
+  },
+  "phone_number_1": {
+    "name": "電話番号1",
+    "type": "phone_number"
+  },
+  "phone_number_2": {
+    "name": "電話番号2",
+    "type": "phone_number"
+  },
+  "industry": {
+    "name": "業種",
+    "type": "rich_text"
+  }
 }
