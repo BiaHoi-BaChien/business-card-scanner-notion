@@ -438,6 +438,82 @@ def render_passkey_registration(settings: Dict[str, Optional[str]]):
             st.caption("現在パスキーが登録されています。")
 
 
+def enable_global_dropzone(uploader_label: str):
+    """Enable dragging files anywhere on the page into the file uploader.
+
+    Streamlit's file uploader only reacts to drops on its own dropzone. This helper
+    listens for drop events across the document, forwards them to the uploader's
+    native ``<input type="file">``, and shows a subtle overlay while dragging.
+    """
+
+    st.markdown(
+        f"""
+        <style>
+        #global-drop-overlay {{
+            position: fixed;
+            inset: 0;
+            border: 2px dashed transparent;
+            background: rgba(0, 0, 0, 0.02);
+            opacity: 0;
+            transition: opacity 0.15s ease, border-color 0.15s ease;
+            pointer-events: none;
+            z-index: 9999;
+        }}
+
+        #global-drop-overlay.active {{
+            border-color: #4a90e2;
+            opacity: 1;
+        }}
+        </style>
+        <div id="global-drop-overlay"></div>
+        <script>
+        (() => {{
+            if (window.__globalDropzoneActive) return;
+            window.__globalDropzoneActive = true;
+
+            const overlay = document.getElementById('global-drop-overlay');
+
+            const findInput = () => Array.from(
+                document.querySelectorAll('input[type="file"]')
+            ).find((el) => {{
+                const labelText = el.getAttribute('aria-label') || '';
+                const labeled = Array.from(el.labels || []).map(l => l.textContent || '').join(' ');
+                return labelText.includes('{uploader_label}') || labeled.includes('{uploader_label}');
+            }});
+
+            const prevent = (event) => {{
+                event.preventDefault();
+                event.stopPropagation();
+            }};
+
+            ['dragenter', 'dragover'].forEach((type) => document.addEventListener(type, (event) => {{
+                prevent(event);
+                overlay?.classList.add('active');
+            }}, false));
+
+            ['dragleave', 'drop'].forEach((type) => document.addEventListener(type, (event) => {{
+                prevent(event);
+                overlay?.classList.remove('active');
+            }}, false));
+
+            document.addEventListener('drop', (event) => {{
+                prevent(event);
+                const input = findInput();
+                const files = event.dataTransfer?.files;
+                if (!input || !files?.length) return;
+
+                const transfer = new DataTransfer();
+                Array.from(files).forEach((file) => transfer.items.add(file));
+                input.files = transfer.files;
+                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}, false);
+        }})();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_app_body(
     settings: Dict[str, Optional[str]], property_names: Dict[str, str]
 ):
@@ -449,6 +525,9 @@ def render_app_body(
         accept_multiple_files=True,
         key=f"uploader_{uploader_key}",
     )
+
+    enable_global_dropzone("名刺画像をアップロード")
+    st.caption("画面のどこにドロップしてもアップロードできます。")
 
     if uploaded_files and len(uploaded_files) > 2:
         st.error("アップロードできるのは最大2枚までです。")
