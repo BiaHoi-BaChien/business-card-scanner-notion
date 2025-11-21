@@ -331,6 +331,14 @@ def ensure_session_defaults():
     st.session_state.setdefault("confirm_notion", False)
 
 
+def reset_user_flow_state():
+    """Reset UI state so a fresh workflow starts after authentication events."""
+
+    st.session_state["contact_data"] = None
+    st.session_state["confirm_notion"] = False
+    st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
+
+
 def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
     ensure_session_defaults()
 
@@ -348,6 +356,7 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
         if st.button("ログアウト", use_container_width=True):
             st.session_state["authenticated"] = False
             st.session_state["login_method"] = ""
+            reset_user_flow_state()
         else:
             return True
 
@@ -368,6 +377,7 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
             if verify_password_login(username_input, password_input, settings):
                 st.session_state["authenticated"] = True
                 st.session_state["login_method"] = "パスワード"
+                reset_user_flow_state()
                 st.rerun()
             else:
                 st.error("ユーザー名またはパスワードが正しくありません。")
@@ -381,6 +391,7 @@ def render_authentication(settings: Dict[str, Optional[str]]) -> bool:
             if verify_passkey(passkey_input, settings):
                 st.session_state["authenticated"] = True
                 st.session_state["login_method"] = "パスキー"
+                reset_user_flow_state()
                 st.rerun()
             else:
                 st.error("パスキーが認証できませんでした。事前に登録してください。")
