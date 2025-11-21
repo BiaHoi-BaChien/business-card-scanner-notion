@@ -80,14 +80,14 @@
         <h2>ログイン</h2>
         <p class="muted">アカウント情報を入力してセッションを開始してください。</p>
         <div class="stack">
-            <form id="login-form" method="post">
+            <form id="login-form" method="post" action="/api/login">
                 <label for="login-username">ユーザー名</label>
                 <input id="login-username" type="text" name="username" placeholder="ユーザー名" required>
                 <label for="login-password">パスワード</label>
                 <input id="login-password" type="password" name="password" placeholder="パスワード" required>
                 <button type="submit">ログイン</button>
             </form>
-            <form id="passkey-login-form" class="row" method="post">
+            <form id="passkey-login-form" class="row" method="post" action="/api/passkey/login">
                 <div>
                     <label for="passkey-login">パスキーでログイン</label>
                     <input id="passkey-login" type="password" name="passkey" placeholder="登録済みパスキー" required>
@@ -107,7 +107,7 @@
             <details class="accordion" id="passkey-accordion">
                 <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
                 <div class="accordion-body" id="passkey-accordion-body">
-                    <form id="passkey-register-form" class="row" method="post">
+                    <form id="passkey-register-form" class="row" method="post" action="/api/passkey/register">
                         <div>
                             <label for="passkey-register">登録するパスキー</label>
                             <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
@@ -123,7 +123,7 @@
             <div>
                 <h3>名刺画像から抽出</h3>
                 <p id="extraction-status" class="muted">1〜2 枚の名刺画像をアップロードして解析を実行してください。</p>
-                <form id="extract-form">
+                <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
                     <label for="extract-images">1〜2 枚の画像ファイルを選択</label>
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <button type="submit">API による解析を実行</button>
@@ -137,7 +137,7 @@
             <section>
                 <h3>Notion 連携</h3>
                 <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
-                <form id="notion-create-form">
+                <form id="notion-create-form" method="post" action="/api/notion/create">
                     <label for="contact-json">contact JSON</label>
                     <textarea id="contact-json" required>{
   "name": "山田 太郎",
