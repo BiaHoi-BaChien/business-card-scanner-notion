@@ -4,14 +4,24 @@ namespace App\Services;
 
 class AuthService
 {
-    public function verifyPasswordLogin(string $username, string $password, array $settings): bool
+    public function verifyPasswordLogin(string $username, string $password, array $settings): array
     {
         $expectedUser = $this->decryptValue($settings['auth_username_enc'] ?? null, $settings['auth_secret'] ?? null);
         $expectedPass = $this->decryptValue($settings['auth_password_enc'] ?? null, $settings['auth_secret'] ?? null);
 
-        return $expectedUser !== null && $expectedPass !== null
-            && hash_equals($expectedUser, $username)
-            && hash_equals($expectedPass, $password);
+        if ($expectedUser === null || $expectedPass === null) {
+            return ['ok' => false, 'error' => 'Missing or invalid encrypted credentials'];
+        }
+
+        if (!hash_equals($expectedUser, $username)) {
+            return ['ok' => false, 'error' => 'Username mismatch'];
+        }
+
+        if (!hash_equals($expectedPass, $password)) {
+            return ['ok' => false, 'error' => 'Password mismatch'];
+        }
+
+        return ['ok' => true, 'error' => null];
     }
 
     public function hashPasskey(string $passkey, string $secret): string
