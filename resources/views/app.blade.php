@@ -71,8 +71,7 @@
         #login-form button { margin-top: 8px; }
         #extract-form button { margin-top: 10px; }
         #notion-submit:disabled { background: #cbd5e1; color: #0f172a; cursor: not-allowed; }
-        .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
-        #logout-button { margin-bottom: 8px; }
+        .section-header { display: flex; align-items: flex-start; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
         .button-danger { background: #b91c1c; }
         .button-danger:hover { background: #991b1b; }
         .muted { color: #475569; font-size: 14px; }
@@ -96,7 +95,7 @@
         .toast {
             position: fixed;
             right: 24px;
-            bottom: 24px;
+            top: 20px;
             background: #0ea5e9;
             color: #fff;
             padding: 12px 16px;
@@ -104,7 +103,7 @@
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
             font-weight: 700;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(-20px);
             transition: opacity 0.2s ease, transform 0.2s ease;
             z-index: 1200;
         }
@@ -144,9 +143,7 @@
 </head>
 <body>
 <div id="loading-overlay" class="hidden" aria-hidden="true">
-    <span class="loading-wave" aria-label="解析中…">
-        <span>解</span><span>析</span><span>中</span><span>…</span>
-    </span>
+    <span id="loading-message" class="loading-wave" aria-label="解析中…"></span>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <header>
@@ -259,6 +256,7 @@
     const passkeyLoginMessage = document.getElementById('passkey-login-message');
     const loadingOverlay = document.getElementById('loading-overlay');
     const toast = document.getElementById('toast');
+    const loadingMessage = document.getElementById('loading-message');
     const extractionDefault = extractionStatus?.textContent || '';
     const notionReadyDefault = notionReady?.textContent || '';
     const notionSubmitDefault = notionSubmit?.textContent || '';
@@ -269,11 +267,28 @@
     };
     let contactSectionVisible = false;
 
-    function setUiDisabled(disabled) {
+    function setLoadingMessage(message = '解析中…') {
+        if (!loadingMessage) return;
+        loadingMessage.setAttribute('aria-label', message);
+        loadingMessage.innerHTML = '';
+        message.split('').forEach((char, index) => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            span.style.animationDelay = `${0.12 * index}s`;
+            loadingMessage.appendChild(span);
+        });
+    }
+
+    function setUiDisabled(disabled, message = '解析中…') {
         const isDisabled = Boolean(disabled);
         if (loadingOverlay) {
             loadingOverlay.classList.toggle('hidden', !isDisabled);
             loadingOverlay.setAttribute('aria-hidden', (!isDisabled).toString());
+            if (isDisabled) {
+                setLoadingMessage(message);
+            } else {
+                setLoadingMessage('解析中…');
+            }
         }
 
         document.querySelectorAll('button, input, textarea, select').forEach((el) => {
@@ -563,7 +578,7 @@
         const timeoutId = setTimeout(() => abortController.abort(), 45000);
 
         try {
-            setUiDisabled(true);
+            setUiDisabled(true, '解析中…');
             const res = await fetch('/api/extract', {
                 method: 'POST',
                 body: buildExtractionFormData(selectedFiles),
@@ -634,6 +649,7 @@
         if (!notionSubmit) return;
         notionSubmit.textContent = '登録中…';
         notionSubmit.disabled = true;
+        setUiDisabled(true, '処理中…');
         try {
             if (!appState.contact) {
                 showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
@@ -647,6 +663,7 @@
         } finally {
             notionSubmit.textContent = notionSubmitDefault || 'Notionへ登録';
             notionSubmit.disabled = false;
+            setUiDisabled(false);
         }
     });
 
