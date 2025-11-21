@@ -11,6 +11,38 @@
         section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         h1 { margin: 0 0 8px; font-size: 24px; }
         h2 { margin-top: 0; font-size: 18px; }
+        .accordion {
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .accordion summary {
+            cursor: pointer;
+            padding: 12px 14px;
+            font-weight: 700;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .accordion summary::-webkit-details-marker {
+            display: none;
+        }
+        .accordion summary::after {
+            content: '＋';
+            font-weight: 900;
+            color: #475569;
+        }
+        .accordion[open] summary::after {
+            content: '－';
+        }
+        .accordion .accordion-body {
+            padding: 0 14px 14px;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
         p { margin: 4px 0 12px; line-height: 1.6; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
         input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
@@ -65,25 +97,23 @@
     </section>
 
     <section id="post-login-section" class="hidden">
-        <h2>ログイン後の操作</h2>
-        <div class="row" style="justify-content: space-between; align-items: center;">
-            <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
-            <button id="logout-button" type="button">ログアウト</button>
-        </div>
+        <div class="pill" id="passkey-state"><small>Passkey</small><span>未登録</span></div>
         <div class="stack">
-            <div>
-                <h3>パスキーの登録 / 更新</h3>
-                <form id="passkey-register-form" class="row">
-                    <div>
-                        <label for="passkey-register">登録するパスキー</label>
-                        <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
-                    </div>
-                    <div style="align-self: end;">
-                        <button type="submit">パスキー登録</button>
-                    </div>
-                </form>
-                <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
-            </div>
+            <details class="accordion" id="passkey-accordion">
+                <summary aria-controls="passkey-accordion-body" aria-expanded="false">パスキーの登録 / 更新</summary>
+                <div class="accordion-body" id="passkey-accordion-body">
+                    <form id="passkey-register-form" class="row">
+                        <div>
+                            <label for="passkey-register">登録するパスキー</label>
+                            <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
+                        </div>
+                        <div style="align-self: end;">
+                            <button type="submit">パスキー登録</button>
+                        </div>
+                    </form>
+                    <p class="muted">ユーザー名/パスワードでログインした後にパスキーを登録すると、以後はパスキーだけでログインできます。</p>
+                </div>
+            </details>
 
             <div>
                 <h3>名刺画像から抽出</h3>
@@ -121,7 +151,9 @@
     const notionReady = document.getElementById('notion-ready');
     const notionSubmit = document.getElementById('notion-submit');
     const passkeyState = document.getElementById('passkey-state');
-    const logoutButton = document.getElementById('logout-button');
+    const passkeyAccordion = document.getElementById('passkey-accordion');
+    const passkeyAccordionSummary = passkeyAccordion?.querySelector('summary');
+    const buildVersionEl = document.getElementById('build-version');
     const appState = {
         authenticated: false,
         contact: null,
@@ -159,9 +191,12 @@
     function updateUi() {
         loginSection.classList.toggle('hidden', appState.authenticated);
         postLoginSection.classList.toggle('hidden', !appState.authenticated);
-        authNotice.textContent = appState.authenticated
-            ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
-            : 'セッションを開始するためにログインしてください。';
+        responseSection.classList.toggle('hidden', !appState.authenticated);
+        if (authNotice) {
+            authNotice.textContent = appState.authenticated
+                ? 'ログイン済みです。パスキー登録や名刺解析を続行できます。'
+                : 'セッションを開始するためにログインしてください。';
+        }
 
         extractionStatus.textContent = appState.contact
             ? '解析結果を確認し、Notion 登録に進めます。'
@@ -174,6 +209,11 @@
         notionSubmit.disabled = !appState.contact;
         passkeyState.querySelector('span').textContent = appState.hasPasskey ? '登録済み' : '未登録';
     }
+
+    passkeyAccordion?.addEventListener('toggle', () => {
+        if (!passkeyAccordionSummary) return;
+        passkeyAccordionSummary.setAttribute('aria-expanded', passkeyAccordion.open ? 'true' : 'false');
+    });
 
     async function postJson(url, body) {
         const res = await fetch(url, {
