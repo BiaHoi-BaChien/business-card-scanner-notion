@@ -68,7 +68,7 @@
         .row > div { flex: 1; }
         button { background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
         button:hover { background: #1d4ed8; }
-        .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+        .section-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 8px; }
         .button-danger { background: #b91c1c; }
         .button-danger:hover { background: #991b1b; }
         .muted { color: #475569; font-size: 14px; }
