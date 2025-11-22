@@ -704,7 +704,7 @@
             return;
         }
         if (!notionConfirm.checked) {
-            alert('内容を確認してチェックをいれてください');
+            alert('チェックを入れてください');
             return;
         }
         if (!notionSubmit) return;
