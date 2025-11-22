@@ -28,6 +28,13 @@ class ExtractionController extends Controller
             return response()->json(['error' => 'Exactly 1 or 2 images are required'], 400);
         }
 
+        foreach ($files as $file) {
+            $mimeType = $file->getClientMimeType();
+            if (strpos($mimeType, 'image/') !== 0) {
+                return response()->json(['error' => 'Only image files are allowed'], 400);
+            }
+        }
+
         $normalized = array_map(function (UploadedFile $file) {
             return [
                 'tmp_name' => $file->getRealPath(),
