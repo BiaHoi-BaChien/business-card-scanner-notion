@@ -1,6 +1,6 @@
 # business-card-scanner-notion (Laravel Web アプリ)
 
-名刺画像から連絡先を抽出し、Notion に登録する Laravel ベースの Web アプリです。ブラウザでアクセスすると、ログイン・パスキー認証・画像アップロード・Notion 登録までを行える UI が表示されます。内部的には Laravel のルーティング/ミドルウェア/サービスコンテナ/セッション管理に従った API を呼び出しています。
+名刺画像から連絡先を抽出し、Notion に登録する Laravel ベースの Web アプリです。ブラウザ UI だけでログイン（パスキー対応）から画像アップロード、Notion 登録まで完結します。内部では Laravel のルーティング/ミドルウェア/サービスコンテナ/セッション管理に従った API を呼び出しています。
 
 ## セットアップ
 
@@ -15,10 +15,10 @@
    php artisan key:generate
    ```
    - `There are no commands defined in the "key" namespace.` が表示される場合は、`vendor/` ディレクトリが存在せず Laravel コマンドが読み込まれていません。先に `composer install` を実行し、依存関係をダウンロードしてから再度お試しください。
-4. ローカルサーバーを起動します（`--host` や `--port` で任意指定も可能）。
+4. ローカルサーバーを起動します（デフォルトは `http://127.0.0.1:8000/`。`--host` や `--port` で任意指定も可能）。
    ```bash
    php artisan serve
-   # 例: php artisan serve --host=0.0.0.0 --port=8080
+   # 例: php artisan serve --host=0.0.0.0 --port=8000
    ```
 
 5. ブラウザで `http://localhost:8000/` にアクセスすると、ログインから Notion 登録までを操作できる Web 画面が表示されます。
@@ -29,7 +29,7 @@
 2. ログイン後に「名刺画像から情報抽出」で 1〜2 枚の画像をアップロードし、抽出結果を確認します。
 3. 抽出結果を修正したい場合は JSON を編集し、「Notionへ登録」を実行します。
 
-同一ブラウザ内でセッション Cookie を共有しており、すべての操作を UI から完結できます。API を直接呼び出す場合は以下のエンドポイントを利用できます。
+セッション Cookie を共有するため、ログイン後の操作は UI だけで完結します。API を直接呼び出す場合は以下のエンドポイントを利用できます。
 
 ## エンドポイント (補足)
 
@@ -37,7 +37,8 @@
 - `POST /api/passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
 - `POST /api/passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
 - `POST /api/extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
-- `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
+- `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["https://...", "http://..."] }` で Notion ページを作成。
+  - `attachments` は Notion が参照できる公開 URL を指定してください（`data:` スキームなどのローカル参照は不可）。
 
 `/api/extract` 以降のエンドポイントはセッションベースの認証が必要です。`/api/login` または `/api/passkey/login` でセッションを確立してください。
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use RuntimeException;
 
 class NotionService
 {
@@ -20,8 +21,12 @@ class NotionService
         ]);
     }
 
-    public function buildPayload(array $contact, array $properties): array
+    public function buildPayload(array $contact, array $properties, string $dataSourceId): array
     {
+        if ($dataSourceId === '') {
+            throw new RuntimeException('NOTION_DATA_SOURCE_ID is not configured');
+        }
+
         $company = isset($contact['company']) ? $this->sanitizeCompany($contact['company']) : '';
 
         $propertyValues = [
@@ -50,7 +55,7 @@ class NotionService
         return [
             'parent' => [
                 'type' => 'data_source_id',
-                'data_source_id' => env('NOTION_DATA_SOURCE_ID'),
+                'data_source_id' => $dataSourceId,
             ],
             'properties' => $notionProperties,
         ];
@@ -62,13 +67,19 @@ class NotionService
     public function createPage(Client $client, array $payload, array $attachments): array
     {
         if (!empty($attachments)) {
-            $payload['children'] = array_map(function (string $dataUrl) {
+            $payload['children'] = array_map(function (string $attachmentUrl) {
+                $scheme = parse_url($attachmentUrl, PHP_URL_SCHEME);
+
+                if (!in_array($scheme, ['http', 'https'], true)) {
+                    throw new RuntimeException('attachments must be public HTTP/HTTPS URLs');
+                }
+
                 return [
                     'object' => 'block',
                     'type' => 'image',
                     'image' => [
                         'type' => 'external',
-                        'external' => ['url' => $dataUrl],
+                        'external' => ['url' => $attachmentUrl],
                     ],
                 ];
             }, $attachments);

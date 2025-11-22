@@ -20,17 +20,31 @@ class NotionController extends Controller
     /** @throws GuzzleException */
     public function create(Request $request): JsonResponse
     {
+        $settings = $this->settings();
+
         $body = $request->validate([
-            'contact' => 'array',
+            'contact' => 'required|array',
+            'contact.name' => 'required|string',
+            'contact.company' => 'nullable|string',
+            'contact.website' => 'nullable|url',
+            'contact.email' => 'required|email',
+            'contact.phone_number_1' => 'nullable|string',
+            'contact.phone_number_2' => 'nullable|string',
+            'contact.industry' => 'nullable|string',
             'attachments' => 'array',
+            'attachments.*' => 'url',
         ]);
 
-        $contact = is_array($body['contact'] ?? null) ? $body['contact'] : [];
-        $attachments = is_array($body['attachments'] ?? null) ? $body['attachments'] : [];
+        $contact = $body['contact'];
+        $attachments = $body['attachments'] ?? [];
+
+        if (empty($settings['notion_data_source_id'])) {
+            return response()->json(['error' => 'NOTION_DATA_SOURCE_ID is not configured'], 500);
+        }
 
         $properties = $this->propertyConfigService->load(base_path());
-        $payload = $this->notionService->buildPayload($contact, $properties);
-        $client = $this->notionService->createClient($this->settings());
+        $payload = $this->notionService->buildPayload($contact, $properties, $settings['notion_data_source_id']);
+        $client = $this->notionService->createClient($settings);
         try {
             $page = $this->notionService->createPage($client, $payload, $attachments);
         } catch (RuntimeException $exception) {
