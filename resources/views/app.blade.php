@@ -169,7 +169,7 @@
     </style>
 </head>
 @php
-    $apiBase = rtrim(url('/api'), '/');
+    $apiBase = rtrim('/api', '/');
 @endphp
 
 <body>
