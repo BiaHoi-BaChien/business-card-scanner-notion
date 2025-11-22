@@ -16,7 +16,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        File::ensureDirectoryExists(storage_path('logs'));
+        $storageDirectories = [
+            storage_path('logs'),
+            storage_path('framework'),
+            storage_path('framework/cache'),
+            storage_path('framework/cache/data'),
+            storage_path('framework/sessions'),
+            storage_path('framework/views'),
+        ];
+
+        foreach ($storageDirectories as $directory) {
+            File::ensureDirectoryExists($directory);
+        }
 
         $version = $this->resolveBuildVersion();
         config(['version.build' => $version]);
