@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         foreach ($storageDirectories as $directory) {
-            File::ensureDirectoryExists($directory);
+            File::ensureDirectoryExists($directory, 0775);
         }
 
         $version = $this->resolveBuildVersion();
