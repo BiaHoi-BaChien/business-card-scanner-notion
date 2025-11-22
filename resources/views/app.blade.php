@@ -169,7 +169,8 @@
     </style>
 </head>
 @php
-    $apiBase = rtrim('/api', '/');
+    $basePath = rtrim(request()->getBasePath(), '/');
+    $apiBase = ($basePath === '') ? '/api' : "{$basePath}/api";
 @endphp
 
 <body>
