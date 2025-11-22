@@ -14,3 +14,8 @@ Route::get('/', function (PropertyConfigService $propertyConfigService) {
 Route::get('/register_business_card', function () {
     return redirect('/');
 });
+
+// ③ 旧エントリーポイント /business_card_to_notion へのアクセスもルートに誘導する
+Route::get('/business_card_to_notion', function () {
+    return redirect('/');
+});
