@@ -5,12 +5,14 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 
 return [
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env('LOG_CHANNEL') === 'daily'
+        ? 'stack'
+        : env('LOG_CHANNEL', 'stack'),
 
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'],
+            'channels' => ['daily', 'stderr'],
             'ignore_exceptions' => false,
         ],
 
