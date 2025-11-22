@@ -529,11 +529,31 @@
             credentials: 'include',
             body: JSON.stringify(body)
         });
-        const json = await res.json().catch(() => ({ message: 'レスポンスの解析に失敗しました', status: res.status }));
-        if (!res.ok) {
-            throw json;
+
+        const contentType = res.headers.get('content-type') || '';
+        let payload = null;
+
+        if (contentType.includes('application/json')) {
+            try {
+                payload = await res.json();
+            } catch (err) {
+                console.warn('Failed to parse JSON response', err);
+            }
         }
-        return json;
+
+        if (payload === null) {
+            const text = await res.text().catch(() => '');
+            payload = text ? { message: text } : {};
+        }
+
+        if (!res.ok) {
+            const errorData = typeof payload === 'object' && payload !== null ? payload : {};
+            errorData.status = res.status;
+            errorData.statusText = res.statusText;
+            throw errorData;
+        }
+
+        return payload ?? {};
     }
 
     async function refreshAuthState() {
