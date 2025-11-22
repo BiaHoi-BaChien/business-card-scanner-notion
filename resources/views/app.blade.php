@@ -168,6 +168,10 @@
         }
     </style>
 </head>
+@php
+    $apiBase = rtrim(url('/api'), '/');
+@endphp
+
 <body>
 <div id="loading-overlay" class="hidden" aria-hidden="true">
     <span id="loading-message" class="loading-wave" aria-label="解析中…"></span>
@@ -183,14 +187,14 @@
         <h2>ログイン</h2>
         <div class="stack">
             <p id="login-error" class="form-error hidden" role="alert"></p>
-            <form id="login-form" method="post" action="/api/login">
+            <form id="login-form" method="post" action="{{ $apiBase }}/login">
                 <label for="login-username">ユーザー名</label>
                 <input id="login-username" type="text" name="username" placeholder="ユーザー名" required>
                 <label for="login-password">パスワード</label>
                 <input id="login-password" type="password" name="password" placeholder="パスワード" required>
                 <button type="submit">ログイン</button>
             </form>
-            <form id="passkey-login-form" class="row" method="post" action="/api/passkey/login">
+            <form id="passkey-login-form" class="row" method="post" action="{{ $apiBase }}/passkey/login">
                 <div>
                     <label for="passkey-login">パスキーでログイン</label>
                     <input id="passkey-login" type="password" name="passkey" placeholder="登録済みパスキー" required>
@@ -217,7 +221,7 @@
                     </span>
                 </summary>
                 <div class="accordion-body" id="passkey-accordion-body">
-                    <form id="passkey-register-form" class="row" method="post" action="/api/passkey/register">
+                    <form id="passkey-register-form" class="row" method="post" action="{{ $apiBase }}/passkey/register">
                         <div>
                             <input id="passkey-register" type="password" name="passkey" placeholder="例: my-device-passkey" required>
                         </div>
@@ -232,7 +236,7 @@
             <div>
                 <h3>名刺画像から情報抽出</h3>
                 <p id="extraction-status" class="muted">名刺画像をアップロードして解析を実行してください。（最大2枚 表と裏）</p>
-                <form id="extract-form" method="post" action="/api/extract" enctype="multipart/form-data">
+                <form id="extract-form" method="post" action="{{ $apiBase }}/extract" enctype="multipart/form-data">
                     <input id="extract-images" type="file" name="images" accept="image/*" multiple required>
                     <div id="drop-zone" class="drop-zone">
                         ここに画像ファイルをドラッグ＆ドロップ
@@ -245,7 +249,7 @@
             <section>
                 <h3>Notion 連携</h3>
                 <p id="notion-ready" class="muted">解析が成功すると Notion への登録ボタンが有効になります。</p>
-                <form id="notion-create-form" method="post" action="/api/notion/create">
+                <form id="notion-create-form" method="post" action="{{ $apiBase }}/notion/create">
                     <div id="contact-section" class="hidden">
                         <div id="contact-table-wrapper" class="contact-table-container hidden">
                             <table class="contact-table">
@@ -264,6 +268,11 @@
 </main>
 <script>
     const propertyConfig = @json($propertyConfig ?? []);
+    const API_BASE = @json($apiBase);
+    const api = (path = '') => {
+        if (!path) return API_BASE;
+        return path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/${path}`;
+    };
     const loginSection = document.getElementById('login-section');
     const postLoginSection = document.getElementById('post-login-section');
     const extractionStatus = document.getElementById('extraction-status');
@@ -506,7 +515,7 @@
 
     logoutButton?.addEventListener('click', async () => {
         try {
-            const data = await postJson('/api/logout', {});
+            const data = await postJson(api('/logout'), {});
             resetUi();
             showResponse(data);
         } catch (err) {
@@ -558,7 +567,7 @@
 
     async function refreshAuthState() {
         try {
-            const res = await fetch('/api/auth/status', { credentials: 'include' });
+            const res = await fetch(api('/auth/status'), { credentials: 'include' });
             const json = await res.json();
             appState.authenticated = Boolean(json.authenticated);
             appState.hasPasskey = Boolean(json.has_registered_passkey);
@@ -573,7 +582,7 @@
         const username = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
         try {
-            const data = await postJson('/api/login', { username, password });
+            const data = await postJson(api('/login'), { username, password });
             appState.authenticated = true;
             appState.contact = null;
             showResponse(data);
@@ -589,7 +598,7 @@
         e.preventDefault();
         const passkey = document.getElementById('passkey-register').value;
         try {
-            const data = await postJson('/api/passkey/register', { passkey });
+            const data = await postJson(api('/passkey/register'), { passkey });
             showResponse(data);
             appState.hasPasskey = true;
             updateUi();
@@ -610,7 +619,7 @@
         }
 
         try {
-            const data = await postJson('/api/passkey/login', { passkey });
+            const data = await postJson(api('/passkey/login'), { passkey });
             appState.authenticated = true;
             appState.contact = null;
             showResponse(data);
@@ -660,7 +669,7 @@
 
         try {
             setUiDisabled(true, '解析中…');
-            const res = await fetch('/api/extract', {
+            const res = await fetch(api('/extract'), {
                 method: 'POST',
                 body: buildExtractionFormData(selectedFiles),
                 credentials: 'include',
@@ -736,7 +745,7 @@
                 showResponse({ error: '解析結果がありません。名刺画像をアップロードしてください。' });
                 return;
             }
-            const data = await postJson('/api/notion/create', { contact: appState.contact, attachments: [] });
+            const data = await postJson(api('/notion/create'), { contact: appState.contact, attachments: [] });
             showResponse(data);
             showToast('登録が完了しました');
         } catch (err) {
