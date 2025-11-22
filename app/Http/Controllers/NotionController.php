@@ -32,7 +32,7 @@ class NotionController extends Controller
             'contact.phone_number_2' => 'nullable|string',
             'contact.industry' => 'nullable|string',
             'attachments' => 'array',
-            'attachments.*' => 'string',
+            'attachments.*' => 'url',
         ]);
 
         $contact = $body['contact'];

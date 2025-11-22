@@ -67,13 +67,19 @@ class NotionService
     public function createPage(Client $client, array $payload, array $attachments): array
     {
         if (!empty($attachments)) {
-            $payload['children'] = array_map(function (string $dataUrl) {
+            $payload['children'] = array_map(function (string $attachmentUrl) {
+                $scheme = parse_url($attachmentUrl, PHP_URL_SCHEME);
+
+                if (!in_array($scheme, ['http', 'https'], true)) {
+                    throw new RuntimeException('attachments must be public HTTP/HTTPS URLs');
+                }
+
                 return [
                     'object' => 'block',
                     'type' => 'image',
                     'image' => [
                         'type' => 'external',
-                        'external' => ['url' => $dataUrl],
+                        'external' => ['url' => $attachmentUrl],
                     ],
                 ];
             }, $attachments);

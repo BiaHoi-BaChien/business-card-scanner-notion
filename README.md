@@ -37,7 +37,8 @@
 - `POST /api/passkey/register` … JSON `{ "passkey": "..." }` をセッションに登録。
 - `POST /api/passkey/login` … JSON `{ "passkey": "..." }` でパスキー認証。
 - `POST /api/extract` … `images[]` (1〜2枚) の multipart 画像から連絡先を抽出。
-- `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["data:<mime>;base64,..."] }` で Notion ページを作成。
+- `POST /api/notion/create` … JSON `{ "contact": { ... }, "attachments": ["https://...", "http://..."] }` で Notion ページを作成。
+  - `attachments` は Notion が参照できる公開 URL を指定してください（`data:` スキームなどのローカル参照は不可）。
 
 `/api/extract` 以降のエンドポイントはセッションベースの認証が必要です。`/api/login` または `/api/passkey/login` でセッションを確立してください。
 
